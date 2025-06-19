@@ -42,7 +42,6 @@ let streamState = new Map<string, {
 
 let memoryPool = new Map<string, ArrayBuffer>();
 const MAX_MEMORY_POOL_SIZE = 50 * 1024 * 1024; // 50MB pool máximo
-}
 
 interface ProcessingResponse {
   id: string;
@@ -55,7 +54,7 @@ interface ProcessingResponse {
 async function processStreamChunk(request: ProcessingRequest): Promise<ProcessingResponse> {
   const { id, chunk, chunkIndex, streamConfig } = request;
   const startTime = performance.now();
-  
+
   try {
     // Inicializar estado de stream si no existe
     if (!streamState.has(id)) {
@@ -67,31 +66,31 @@ async function processStreamChunk(request: ProcessingRequest): Promise<Processin
         totalBytes: 0
       });
     }
-    
+
     const state = streamState.get(id)!;
-    
+
     // Procesar chunk
     if (chunk) {
       // Actualizar hash incrementalmente
       state.hasher.update(chunk);
       state.processedChunks++;
       state.totalBytes += chunk.length;
-      
+
       // Liberar chunk inmediatamente
       const chunkCopy = null; // Eliminar referencia
-      
+
       // Calcular progreso y rendimiento
       const progress = (state.processedChunks / state.totalChunks) * 100;
       const elapsedTime = (Date.now() - state.startTime) / 1000;
       const throughput = elapsedTime > 0 ? state.totalBytes / elapsedTime : 0;
-      
+
       // Si es el último chunk, finalizar hash
       let finalHash = null;
       if (state.processedChunks === state.totalChunks) {
         finalHash = state.hasher.digest('hex');
         streamState.delete(id); // Limpiar estado
       }
-      
+
       return {
         id,
         type: 'stream-chunk',
@@ -109,9 +108,9 @@ async function processStreamChunk(request: ProcessingRequest): Promise<Processin
         memoryUsage: getMemoryUsage()
       };
     }
-    
+
     throw new Error('No chunk data provided');
-    
+
   } catch (error) {
     streamState.delete(id); // Limpiar en caso de error
     return {
@@ -128,11 +127,11 @@ async function processStreamChunk(request: ProcessingRequest): Promise<Processin
  */
 async function optimizeMemory(request: ProcessingRequest): Promise<ProcessingResponse> {
   const startTime = performance.now();
-  
+
   try {
     // Limpiar pool de memoria
     memoryPool.clear();
-    
+
     // Limpiar estados antiguos (>5 minutos)
     const now = Date.now();
     for (const [id, state] of streamState) {
@@ -140,14 +139,14 @@ async function optimizeMemory(request: ProcessingRequest): Promise<ProcessingRes
         streamState.delete(id);
       }
     }
-    
+
     // Forzar garbage collection si está disponible
     if (typeof gc === 'function') {
       gc();
     }
-    
+
     const memoryAfter = getMemoryUsage();
-    
+
     return {
       id: request.id,
       type: 'memory-optimize',
@@ -163,7 +162,7 @@ async function optimizeMemory(request: ProcessingRequest): Promise<ProcessingRes
       },
       memoryUsage: memoryAfter
     };
-    
+
   } catch (error) {
     return {
       id: request.id,
@@ -201,24 +200,24 @@ async function createHasher(algorithm: string) {
         const totalLength = this.chunks.reduce((sum, chunk) => sum + chunk.length, 0);
         const combined = new Uint8Array(totalLength);
         let offset = 0;
-        
+
         for (const chunk of this.chunks) {
           combined.set(chunk, offset);
           offset += chunk.length;
         }
-        
+
         // Calcular hash
         const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-        
+
         // Limpiar chunks inmediatamente
         this.chunks = [];
-        
+
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       }
     };
   }
-  
+
   // Fallback a hasher simple
   return createSimpleHasher(algorithm);
 }
@@ -228,7 +227,7 @@ async function createHasher(algorithm: string) {
  */
 function createSimpleHasher(algorithm: string) {
   const chunks: Uint8Array[] = [];
-  
+
   return {
     update(chunk: Uint8Array) {
       chunks.push(new Uint8Array(chunk));
@@ -238,16 +237,16 @@ function createSimpleHasher(algorithm: string) {
       let hash = 0;
       const combined = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
       let offset = 0;
-      
+
       for (const chunk of chunks) {
         combined.set(chunk, offset);
         offset += chunk.length;
       }
-      
+
       for (let i = 0; i < combined.length; i++) {
         hash = ((hash << 5) - hash + combined[i]) & 0xffffffff;
       }
-      
+
       chunks.length = 0; // Limpiar
       return hash.toString(16);
     }
@@ -258,33 +257,33 @@ function createSimpleHasher(algorithm: string) {
 self.onmessage = async (event: MessageEvent<ProcessingRequest>) => {
   const request = event.data;
   let response: ProcessingResponse;
-  
+
   try {
     switch (request.type) {
       case 'stream-chunk':
         response = await processStreamChunk(request);
         break;
-        
+
       case 'memory-optimize':
         response = await optimizeMemory(request);
         break;
-        
+
       case 'hash':
         response = await calculateHash(request);
         break;
-        
+
       case 'analyze':
         response = await analyzeContent(request);
         break;
-        
+
       case 'compress':
         response = await compressData(request);
         break;
-        
+
       case 'validate':
         response = await validateContent(request);
         break;
-        
+
       default:
         response = {
           id: request.id,
@@ -301,7 +300,7 @@ self.onmessage = async (event: MessageEvent<ProcessingRequest>) => {
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
-  
+
   self.postMessage(response);
 };
 
@@ -332,16 +331,16 @@ async function calculateHash(buffer: ArrayBuffer, algorithm: string): Promise<st
 async function analyzeFile(buffer: ArrayBuffer): Promise<any> {
   const view = new Uint8Array(buffer);
   const firstBytes = Array.from(view.slice(0, 16));
-  
+
   // Detectar tipo de archivo por magic numbers
   const fileType = detectFileType(firstBytes);
-  
+
   // Calcular entropía para detectar contenido cifrado
   const entropy = calculateEntropy(view);
-  
+
   // Análizar estructura del archivo
   const structure = analyzeStructure(view);
-  
+
   return {
     fileType,
     entropy,
@@ -359,7 +358,7 @@ function detectFileType(bytes: number[]): string {
     'JPEG': [0xFF, 0xD8, 0xFF],
     'GIF': [0x47, 0x49, 0x46, 0x38]
   };
-  
+
   for (const [type, signature] of Object.entries(signatures)) {
     if (signature.every((byte, index) => bytes[index] === byte)) {
       return type;
@@ -373,17 +372,17 @@ function calculateEntropy(data: Uint8Array): number {
   for (const byte of data) {
     frequencies[byte]++;
   }
-  
+
   let entropy = 0;
   const length = data.length;
-  
+
   for (const freq of frequencies) {
     if (freq > 0) {
       const p = freq / length;
       entropy -= p * Math.log2(p);
     }
   }
-  
+
   return entropy;
 }
 
@@ -414,11 +413,11 @@ function detectRepeatingPatterns(data: Uint8Array): number {
 async function compressData(buffer: ArrayBuffer): Promise<ArrayBuffer> {
   const input = new Uint8Array(buffer);
   const compressed: number[] = [];
-  
+
   for (let i = 0; i < input.length; i++) {
     let bestLength = 0;
     let bestDistance = 0;
-    
+
     // Buscar coincidencias en ventana deslizante
     const windowStart = Math.max(0, i - 255);
     for (let j = windowStart; j < i; j++) {
@@ -430,13 +429,13 @@ async function compressData(buffer: ArrayBuffer): Promise<ArrayBuffer> {
       ) {
         length++;
       }
-      
+
       if (length > bestLength) {
         bestLength = length;
         bestDistance = i - j;
       }
     }
-    
+
     if (bestLength > 3) {
       compressed.push(0xFF, bestDistance, bestLength);
       i += bestLength - 1;
@@ -444,66 +443,59 @@ async function compressData(buffer: ArrayBuffer): Promise<ArrayBuffer> {
       compressed.push(input[i]);
     }
   }
-  
+
   return new Uint8Array(compressed).buffer;
 }
+interface WorkerMessage {
+  type: 'init' | 'update' | 'finalize';
+  data?: Uint8Array;
+  algorithm?: string;
+}
 
-self.onmessage = async (event: MessageEvent<ProcessingRequest>) => {
-  const { id, type, buffer, algorithm, options } = event.data;
-  const startTime = performance.now();
-  const memoryBefore = (performance as any).memory?.usedJSHeapSize || 0;
-  
-  try {
-    let result: any;
-    
-    switch (type) {
-      case 'hash':
-        if (!algorithm) throw new Error('Algorithm required for hash');
-        result = await calculateHash(buffer, algorithm.toUpperCase().replace('SHA', 'SHA-'));
-        break;
-        
-      case 'analyze':
-        result = await analyzeFile(buffer);
-        break;
-        
-      case 'compress':
-        result = await compressData(buffer);
-        break;
-        
-      case 'validate':
-        const analysis = await analyzeFile(buffer);
-        result = {
-          isValid: !analysis.suspicious,
-          issues: analysis.suspicious ? ['High entropy detected', 'Potential encryption'] : [],
-          score: analysis.suspicious ? 0.3 : 0.9
-        };
-        break;
-        
-      default:
-        throw new Error(`Tipo de procesamiento no soportado: ${type}`);
+interface WorkerResponse {
+  type: 'ready' | 'result' | 'error';
+  hash?: string;
+  error?: string;
+}
+
+self.onmessage = function(e: MessageEvent<WorkerMessage>) {
+  const { type, data, algorithm } = e.data;
+
+  // Inicializar hasher
+  let hasher: any;
+
+  if (type === 'init' && algorithm) {
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+      crypto.subtle.digest('SHA-256', new Uint8Array([0])).then(() => {
+        // Web Crypto API is supported
+        (async () => {
+          hasher = await createHasher(algorithm);
+          const response: WorkerResponse = { type: 'ready' };
+          self.postMessage(response);
+        })();
+      }).catch(() => {
+        // Web Crypto API is not supported
+        hasher = createSimpleHasher(algorithm);
+        const response: WorkerResponse = { type: 'ready' };
+        self.postMessage(response);
+      });
+    } else {
+      hasher = createSimpleHasher(algorithm);
+      const response: WorkerResponse = { type: 'ready' };
+      self.postMessage(response);
     }
-    
-    const duration = performance.now() - startTime;
-    const memoryAfter = (performance as any).memory?.usedJSHeapSize || 0;
-    
-    const response: ProcessingResponse = {
-      id,
-      type,
-      result,
-      metrics: {
-        duration,
-        memoryUsed: memoryAfter - memoryBefore,
-        cpuIntensive: duration > 100
-      }
-    };
-    
+  }
+
+  if (type === 'update' && data) {
+    hasher.update(data);
+    const response: WorkerResponse = { type: 'result' };
     self.postMessage(response);
-  } catch (error) {
-    self.postMessage({
-      id,
-      type,
-      error: error instanceof Error ? error.message : 'Error en procesamiento'
-    });
+  }
+
+  if (type === 'finalize') {
+    const hash = hasher.digest('hex');
+    const response: WorkerResponse = { type: 'result', hash };
+    self.postMessage(response);
   }
 };
 

@@ -1,343 +1,319 @@
 
-// Sistema de streaming de archivos sin carga en RAM - MAAT v1.1.0
-// Procesa archivos grandes directamente desde disco sin usar memoria del navegador
+// Streaming verdaderamente zero-memory para archivos grandes - MAAT v1.1.1
+// Sin carga completa en RAM - Chunks máximos de 1MB
 
 export interface StreamConfig {
-  chunkSize: number;
-  maxConcurrentChunks: number;
-  enableCompression: boolean;
-  fallbackThreshold: number; // MB
-  memoryLimit: number; // MB
+  readonly chunkSize: number;
+  readonly maxBufferSize: number;
+  readonly enableBackpressure: boolean;
+  readonly compressionLevel: number;
 }
 
 export interface StreamProgress {
-  bytesProcessed: number;
-  totalBytes: number;
-  chunksProcessed: number;
-  totalChunks: number;
-  currentSpeed: number; // bytes/second
-  memoryUsage: number; // MB
-  estimatedTimeRemaining: number; // seconds
+  readonly bytesProcessed: number;
+  readonly totalBytes: number;
+  readonly currentChunk: number;
+  readonly totalChunks: number;
+  readonly speed: number; // bytes/second
+  readonly estimatedTimeRemaining: number;
 }
 
-export class ZeroMemoryStreamManager {
-  private config: StreamConfig;
-  private activeStreams = new Map<string, ReadableStreamDefaultReader>();
-  private memoryMonitor: PerformanceObserver | null = null;
-  
+export interface StreamResult {
+  readonly success: boolean;
+  readonly bytesProcessed: number;
+  readonly processingTime: number;
+  readonly chunks: number;
+  readonly hash: string;
+  readonly compressionRatio?: number;
+  readonly error?: string;
+}
+
+export class ZeroMemoryStreamer {
+  private readonly config: StreamConfig;
+  private readonly activeStreams = new Map<string, AbortController>();
+  private readonly ABSOLUTE_CHUNK_LIMIT = 1024 * 1024; // 1MB límite absoluto
+
   constructor(config: Partial<StreamConfig> = {}) {
     this.config = {
-      chunkSize: this.getOptimalChunkSize(),
-      maxConcurrentChunks: this.getMaxConcurrentChunks(),
-      enableCompression: true,
-      fallbackThreshold: 50, // 50MB threshold para fallback
-      memoryLimit: this.getMemoryLimit(),
+      chunkSize: Math.min(512 * 1024, config.chunkSize || 512 * 1024), // 512KB por defecto, máximo 1MB
+      maxBufferSize: Math.min(2 * 1024 * 1024, config.maxBufferSize || 1024 * 1024), // 1MB buffer máximo
+      enableBackpressure: config.enableBackpressure ?? true,
+      compressionLevel: config.compressionLevel || 6,
       ...config
     };
-    
-    this.initializeMemoryMonitoring();
+
+    // Forzar límites seguros
+    if (this.config.chunkSize > this.ABSOLUTE_CHUNK_LIMIT) {
+      this.config = { ...this.config, chunkSize: this.ABSOLUTE_CHUNK_LIMIT };
+      console.warn(`[ZERO-MEMORY-STREAM] Chunk size limitado a ${this.ABSOLUTE_CHUNK_LIMIT} bytes para seguridad`);
+    }
   }
 
   /**
-   * Procesa archivo grande con streaming puro - sin carga en RAM
+   * Procesa archivo con streaming real sin cargar en memoria
    */
   async streamFile(
     file: File,
-    onProgress: (progress: StreamProgress) => void,
-    onChunk: (chunk: Uint8Array, index: number) => Promise<void>
-  ): Promise<void> {
+    onProgress?: (progress: StreamProgress) => void,
+    onChunk?: (chunk: Uint8Array, index: number) => Promise<void>
+  ): Promise<StreamResult> {
     const streamId = `stream_${Date.now()}_${Math.random().toString(36)}`;
-    
-    try {
-      // Verificar si necesitamos fallback
-      if (file.size > this.config.fallbackThreshold * 1024 * 1024) {
-        return await this.streamLargeFile(file, streamId, onProgress, onChunk);
-      } else {
-        return await this.streamSmallFile(file, streamId, onProgress, onChunk);
-      }
-    } catch (error) {
-      console.error(`[ZERO-MEMORY-STREAM] Error processing file: ${error}`);
-      throw error;
-    }
-  }
+    const abortController = new AbortController();
+    this.activeStreams.set(streamId, abortController);
 
-  /**
-   * Streaming optimizado para archivos grandes >50MB
-   */
-  private async streamLargeFile(
-    file: File,
-    streamId: string,
-    onProgress: (progress: StreamProgress) => void,
-    onChunk: (chunk: Uint8Array, index: number) => Promise<void>
-  ): Promise<void> {
-    const totalChunks = Math.ceil(file.size / this.config.chunkSize);
-    let chunksProcessed = 0;
-    let bytesProcessed = 0;
     const startTime = Date.now();
-
-    console.log(`[ZERO-MEMORY-STREAM] Starting large file streaming: ${file.name} (${totalChunks} chunks)`);
-
-    // Crear ReadableStream desde el archivo
-    const fileStream = file.stream();
-    const reader = fileStream.getReader();
-    this.activeStreams.set(streamId, reader);
+    const totalBytes = file.size;
+    const totalChunks = Math.ceil(totalBytes / this.config.chunkSize);
+    
+    let bytesProcessed = 0;
+    let currentChunk = 0;
+    let hashCalculator: any = null;
 
     try {
-      let chunkIndex = 0;
-      let buffer = new Uint8Array(0);
+      // Inicializar hash calculator en worker si está disponible
+      if (typeof Worker !== 'undefined') {
+        hashCalculator = await this.initializeHashWorker();
+      }
 
+      // Crear reader del archivo
+      const reader = file.stream().getReader();
+      let buffer = new Uint8Array(0);
+      
       while (true) {
+        // Verificar si fue cancelado
+        if (abortController.signal.aborted) {
+          throw new Error('Streaming cancelado por el usuario');
+        }
+
+        // Leer siguiente chunk del stream
         const { done, value } = await reader.read();
         
-        if (done) {
-          // Procesar último chunk si queda data
-          if (buffer.length > 0) {
-            await this.processChunk(buffer, chunkIndex, onChunk);
-            bytesProcessed += buffer.length;
-            chunksProcessed++;
-          }
-          break;
+        if (done && buffer.length === 0) {
+          break; // Terminar si no hay más datos
         }
 
-        // Acumular data hasta alcanzar el tamaño de chunk deseado
-        buffer = this.concatenateArrays(buffer, value);
+        // Combinar con buffer existente si es necesario
+        if (value) {
+          const newBuffer = new Uint8Array(buffer.length + value.length);
+          newBuffer.set(buffer);
+          newBuffer.set(value, buffer.length);
+          buffer = newBuffer;
+        }
 
-        // Procesar chunks completos
-        while (buffer.length >= this.config.chunkSize) {
-          const chunk = buffer.slice(0, this.config.chunkSize);
-          const remaining = buffer.slice(this.config.chunkSize);
-
-          await this.processChunk(chunk, chunkIndex, onChunk);
+        // Procesar chunks completos del buffer
+        while (buffer.length >= this.config.chunkSize || (done && buffer.length > 0)) {
+          const chunkSize = Math.min(this.config.chunkSize, buffer.length);
+          const chunk = buffer.slice(0, chunkSize);
           
-          bytesProcessed += chunk.length;
-          chunksProcessed++;
-          chunkIndex++;
+          // Actualizar hash de forma incremental
+          if (hashCalculator) {
+            hashCalculator.postMessage({ type: 'update', data: chunk });
+          }
+
+          // Procesar chunk (upload, análisis, etc.)
+          if (onChunk) {
+            await onChunk(chunk, currentChunk);
+          }
 
           // Actualizar progreso
-          const elapsedTime = (Date.now() - startTime) / 1000;
-          const speed = elapsedTime > 0 ? bytesProcessed / elapsedTime : 0;
-          const remainingBytes = file.size - bytesProcessed;
-          const estimatedTimeRemaining = speed > 0 ? remainingBytes / speed : 0;
+          bytesProcessed += chunkSize;
+          currentChunk++;
+          
+          const speed = bytesProcessed / ((Date.now() - startTime) / 1000);
+          const estimatedTimeRemaining = speed > 0 ? (totalBytes - bytesProcessed) / speed : 0;
 
-          onProgress({
-            bytesProcessed,
-            totalBytes: file.size,
-            chunksProcessed,
-            totalChunks,
-            currentSpeed: speed,
-            memoryUsage: await this.getCurrentMemoryUsage(),
-            estimatedTimeRemaining
-          });
-
-          buffer = remaining;
-
-          // Control de memoria - pausar si excedemos límites
-          const currentMemory = await this.getCurrentMemoryUsage();
-          if (currentMemory > this.config.memoryLimit) {
-            console.warn(`[ZERO-MEMORY-STREAM] Memory limit exceeded: ${currentMemory}MB`);
-            await this.waitForMemoryRelease();
+          if (onProgress) {
+            onProgress({
+              bytesProcessed,
+              totalBytes,
+              currentChunk,
+              totalChunks,
+              speed,
+              estimatedTimeRemaining
+            });
           }
+
+          // Remover chunk procesado del buffer
+          buffer = buffer.slice(chunkSize);
+
+          // Implementar backpressure si está habilitado
+          if (this.config.enableBackpressure && buffer.length > this.config.maxBufferSize) {
+            await this.sleep(10); // Pausa pequeña para permitir que se libere memoria
+          }
+
+          // Si terminamos y no hay más buffer, salir
+          if (done && buffer.length === 0) {
+            break;
+          }
+        }
+
+        if (done) {
+          break;
         }
       }
 
-      console.log(`[ZERO-MEMORY-STREAM] Large file streaming completed: ${file.name}`);
+      reader.releaseLock();
 
+      // Finalizar hash
+      let finalHash = '';
+      if (hashCalculator) {
+        finalHash = await this.finalizeHash(hashCalculator);
+      }
+
+      const processingTime = Date.now() - startTime;
+
+      console.log(`[ZERO-MEMORY-STREAM] Archivo procesado: ${bytesProcessed} bytes en ${currentChunk} chunks`);
+
+      return {
+        success: true,
+        bytesProcessed,
+        processingTime,
+        chunks: currentChunk,
+        hash: finalHash,
+        compressionRatio: undefined
+      };
+
+    } catch (error) {
+      console.error('[ZERO-MEMORY-STREAM] Error en streaming:', error);
+      
+      return {
+        success: false,
+        bytesProcessed,
+        processingTime: Date.now() - startTime,
+        chunks: currentChunk,
+        hash: '',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
     } finally {
       this.activeStreams.delete(streamId);
-      reader.releaseLock();
-    }
-  }
-
-  /**
-   * Streaming optimizado para archivos pequeños <50MB
-   */
-  private async streamSmallFile(
-    file: File,
-    streamId: string,
-    onProgress: (progress: StreamProgress) => void,
-    onChunk: (chunk: Uint8Array, index: number) => Promise<void>
-  ): Promise<void> {
-    const totalChunks = Math.ceil(file.size / this.config.chunkSize);
-    let chunksProcessed = 0;
-    const startTime = Date.now();
-
-    console.log(`[ZERO-MEMORY-STREAM] Starting small file streaming: ${file.name}`);
-
-    for (let i = 0; i < totalChunks; i++) {
-      const start = i * this.config.chunkSize;
-      const end = Math.min(start + this.config.chunkSize, file.size);
       
-      // Slice del archivo - esto es eficiente y no carga todo en memoria
-      const chunkBlob = file.slice(start, end);
-      const chunkArrayBuffer = await chunkBlob.arrayBuffer();
-      const chunk = new Uint8Array(chunkArrayBuffer);
-
-      await this.processChunk(chunk, i, onChunk);
-      chunksProcessed++;
-
-      // Actualizar progreso
-      const elapsedTime = (Date.now() - startTime) / 1000;
-      const bytesProcessed = end;
-      const speed = elapsedTime > 0 ? bytesProcessed / elapsedTime : 0;
-      const remainingBytes = file.size - bytesProcessed;
-      const estimatedTimeRemaining = speed > 0 ? remainingBytes / speed : 0;
-
-      onProgress({
-        bytesProcessed,
-        totalBytes: file.size,
-        chunksProcessed,
-        totalChunks,
-        currentSpeed: speed,
-        memoryUsage: await this.getCurrentMemoryUsage(),
-        estimatedTimeRemaining
-      });
-
-      // Pequeña pausa para evitar bloquear UI
-      if (i % 10 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 1));
+      // Cleanup hash worker
+      if (hashCalculator) {
+        hashCalculator.terminate();
       }
     }
-
-    console.log(`[ZERO-MEMORY-STREAM] Small file streaming completed: ${file.name}`);
   }
 
   /**
-   * Procesa un chunk individual
+   * Cancela un stream activo
    */
-  private async processChunk(
-    chunk: Uint8Array,
-    index: number,
-    onChunk: (chunk: Uint8Array, index: number) => Promise<void>
-  ): Promise<void> {
+  cancelStream(streamId?: string): void {
+    if (streamId && this.activeStreams.has(streamId)) {
+      this.activeStreams.get(streamId)?.abort();
+      this.activeStreams.delete(streamId);
+    } else {
+      // Cancelar todos los streams activos
+      for (const [id, controller] of this.activeStreams.entries()) {
+        controller.abort();
+        this.activeStreams.delete(id);
+      }
+    }
+    console.log(`[ZERO-MEMORY-STREAM] Stream(s) cancelado(s)`);
+  }
+
+  /**
+   * Inicializa worker para cálculo de hash
+   */
+  private async initializeHashWorker(): Promise<Worker> {
     try {
-      await onChunk(chunk, index);
+      const worker = new Worker(
+        new URL('../workers/hash-calculator.ts', import.meta.url),
+        { type: 'module' }
+      );
+      
+      worker.postMessage({ type: 'init', algorithm: 'SHA-256' });
+      return worker;
     } catch (error) {
-      console.error(`[ZERO-MEMORY-STREAM] Error processing chunk ${index}:`, error);
+      console.warn('[ZERO-MEMORY-STREAM] Hash worker no disponible, usando fallback');
       throw error;
     }
   }
 
   /**
-   * Concatena dos Uint8Arrays de manera eficiente
+   * Finaliza el cálculo de hash
    */
-  private concatenateArrays(array1: Uint8Array, array2: Uint8Array): Uint8Array {
-    const result = new Uint8Array(array1.length + array2.length);
-    result.set(array1, 0);
-    result.set(array2, array1.length);
-    return result;
-  }
+  private async finalizeHash(worker: Worker): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Hash calculation timeout'));
+      }, 5000);
 
-  /**
-   * Obtiene el tamaño óptimo de chunk basado en el dispositivo
-   */
-  private getOptimalChunkSize(): number {
-    // Detectar capacidades del dispositivo
-    const memory = (navigator as any).deviceMemory || 4; // GB
-    const connection = (navigator as any).connection?.effectiveType || '4g';
-    
-    if (memory <= 2) {
-      return 256 * 1024; // 256KB para dispositivos limitados
-    } else if (memory <= 4) {
-      return 512 * 1024; // 512KB para dispositivos medios
-    } else {
-      return 1024 * 1024; // 1MB para dispositivos potentes
-    }
-  }
-
-  /**
-   * Obtiene el máximo de chunks concurrentes basado en el dispositivo
-   */
-  private getMaxConcurrentChunks(): number {
-    const memory = (navigator as any).deviceMemory || 4;
-    return Math.min(Math.max(Math.floor(memory / 2), 1), 8);
-  }
-
-  /**
-   * Obtiene el límite de memoria basado en el dispositivo
-   */
-  private getMemoryLimit(): number {
-    const memory = (navigator as any).deviceMemory || 4;
-    return Math.floor(memory * 1024 * 0.25); // 25% de la RAM disponible
-  }
-
-  /**
-   * Monitorea el uso de memoria en tiempo real
-   */
-  private initializeMemoryMonitoring(): void {
-    if ('PerformanceObserver' in window && 'memory' in performance) {
-      try {
-        this.memoryMonitor = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          entries.forEach(entry => {
-            if (entry.name === 'measure-memory') {
-              console.log(`[ZERO-MEMORY-STREAM] Memory usage: ${entry.duration}MB`);
-            }
-          });
-        });
-        
-        this.memoryMonitor.observe({ entryTypes: ['measure'] });
-      } catch (error) {
-        console.warn('[ZERO-MEMORY-STREAM] Memory monitoring not available');
-      }
-    }
-  }
-
-  /**
-   * Obtiene el uso actual de memoria
-   */
-  private async getCurrentMemoryUsage(): Promise<number> {
-    if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      return Math.round(memory.usedJSHeapSize / 1024 / 1024); // Convert to MB
-    }
-    return 0;
-  }
-
-  /**
-   * Espera a que se libere memoria
-   */
-  private async waitForMemoryRelease(): Promise<void> {
-    return new Promise(resolve => {
-      const checkMemory = async () => {
-        const currentMemory = await this.getCurrentMemoryUsage();
-        if (currentMemory <= this.config.memoryLimit * 0.8) { // 80% del límite
-          resolve();
-        } else {
-          // Forzar garbage collection si está disponible
-          if ('gc' in window) {
-            (window as any).gc();
-          }
-          setTimeout(checkMemory, 100);
+      worker.onmessage = (e) => {
+        if (e.data.type === 'result') {
+          clearTimeout(timeout);
+          resolve(e.data.hash);
         }
       };
-      checkMemory();
+
+      worker.onerror = (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      };
+
+      worker.postMessage({ type: 'finalize' });
     });
   }
 
   /**
-   * Cancela todos los streams activos
+   * Obtiene estadísticas de memoria actual
    */
-  async cancelAllStreams(): Promise<void> {
-    for (const [streamId, reader] of this.activeStreams) {
-      try {
-        await reader.cancel();
-        reader.releaseLock();
-      } catch (error) {
-        console.warn(`[ZERO-MEMORY-STREAM] Error canceling stream ${streamId}:`, error);
-      }
-    }
-    this.activeStreams.clear();
+  getMemoryStats(): {
+    activeStreams: number;
+    estimatedMemoryUsage: number;
+    maxChunkSize: number;
+    maxBufferSize: number;
+  } {
+    return {
+      activeStreams: this.activeStreams.size,
+      estimatedMemoryUsage: this.activeStreams.size * this.config.maxBufferSize,
+      maxChunkSize: this.config.chunkSize,
+      maxBufferSize: this.config.maxBufferSize
+    };
   }
 
   /**
-   * Limpia recursos y detiene monitoreo
+   * Verifica si el sistema puede manejar un archivo de cierto tamaño
    */
-  cleanup(): void {
-    this.cancelAllStreams();
-    if (this.memoryMonitor) {
-      this.memoryMonitor.disconnect();
+  canHandleFile(fileSize: number): {
+    canHandle: boolean;
+    reason?: string;
+    recommendedChunkSize?: number;
+  } {
+    // Verificar memoria disponible aproximada
+    const estimatedMemoryNeed = this.config.maxBufferSize;
+    const memoryInfo = (performance as any).memory;
+    
+    if (memoryInfo) {
+      const availableMemory = memoryInfo.jsHeapSizeLimit - memoryInfo.usedJSHeapSize;
+      
+      if (estimatedMemoryNeed > availableMemory * 0.8) { // Usar máximo 80% de memoria disponible
+        const recommendedChunkSize = Math.min(
+          Math.floor(availableMemory * 0.1), // 10% de memoria disponible por chunk
+          512 * 1024 // Máximo 512KB
+        );
+        
+        return {
+          canHandle: false,
+          reason: 'Memoria insuficiente para el tamaño de chunk actual',
+          recommendedChunkSize
+        };
+      }
     }
+
+    // Verificar si el archivo es demasiado pequeño (overhead innecesario)
+    if (fileSize < this.config.chunkSize / 4) {
+      return {
+        canHandle: true,
+        reason: 'Archivo pequeño - considerar carga directa en lugar de streaming'
+      };
+    }
+
+    return { canHandle: true };
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 
-export const zeroMemoryStreamManager = new ZeroMemoryStreamManager();
+export const zeroMemoryStreamer = new ZeroMemoryStreamer();

@@ -39,6 +39,22 @@ export interface RecoverySession {
   readonly errors: NetworkError[];
 }
 
+export interface CircuitBreakerState {
+  readonly state: 'closed' | 'open' | 'half-open';
+  readonly failureCount: number;
+  readonly lastFailureTime: number;
+  readonly nextAttemptTime: number;
+}
+
+export interface PriorityQueueItem {
+  readonly id: string;
+  readonly operation: () => Promise<any>;
+  readonly priority: 'urgent' | 'high' | 'normal' | 'low';
+  readonly uploadId: string;
+  readonly retryCount: number;
+  readonly addedAt: number;
+}
+
 export class NetworkErrorHandler {
   private readonly defaultConfig: RetryConfig = {
     maxRetries: 5,
@@ -50,6 +66,20 @@ export class NetworkErrorHandler {
 
   private readonly sessions = new Map<string, RecoverySession>();
   private readonly STORAGE_KEY = 'maat_recovery_sessions';
+  
+  // Circuit Breaker
+  private circuitBreaker: CircuitBreakerState = {
+    state: 'closed',
+    failureCount: 0,
+    lastFailureTime: 0,
+    nextAttemptTime: 0
+  };
+  
+  // Priority Queue para archivos críticos
+  private priorityQueue: PriorityQueueItem[] = [];
+  private isProcessingQueue = false;
+  private readonly CIRCUIT_BREAKER_THRESHOLD = 5;
+  private readonly CIRCUIT_BREAKER_TIMEOUT = 60000; // 1 minuto
 
   constructor(private config: Partial<RetryConfig> = {}) {
     this.loadRecoverySessions();
@@ -57,13 +87,21 @@ export class NetworkErrorHandler {
   }
 
   /**
-   * Ejecuta una operación con reintentos automáticos inteligentes
+   * Ejecuta una operación con reintentos automáticos inteligentes y circuit breaker
    */
   async executeWithRetry<T>(
     operation: () => Promise<T>,
     config?: Partial<RetryConfig>,
     context?: { uploadId?: string; chunkIndex?: number; priority?: 'urgent' | 'high' | 'normal' | 'low' }
   ): Promise<T> {
+    // Verificar circuit breaker antes de intentar
+    if (!this.canExecute()) {
+      if (context?.priority === 'urgent' || context?.priority === 'high') {
+        // Archivos críticos van a la cola de prioridad
+        return this.addToPriorityQueue(operation, context);
+      }
+      throw new Error('Circuit breaker abierto - Servicio temporalmente no disponible');
+    }
     const retryConfig = { ...this.defaultConfig, ...config };
     const attempts: RetryAttempt[] = [];
     let lastError: NetworkError;
@@ -80,6 +118,9 @@ export class NetworkErrorHandler {
         return result;
       } catch (error) {
         lastError = this.classifyError(error);
+        
+        // Actualizar circuit breaker en caso de fallo
+        this.recordFailure();
         
         // Guardar información del intento
         attempts.push({
@@ -99,6 +140,11 @@ export class NetworkErrorHandler {
               priority: context.priority || 'normal',
               error: lastError
             });
+          }
+          
+          // Si es crítico, añadir a cola de prioridad
+          if (context?.priority === 'urgent' || context?.priority === 'high') {
+            await this.addToPriorityQueue(operation, context);
           }
           break;
         }
@@ -409,6 +455,186 @@ export class NetworkErrorHandler {
         this.saveRecoverySessions();
       }
     }, 60 * 60 * 1000); // Cada hora
+  }
+
+  /**
+   * Verifica si el circuit breaker permite ejecutar operaciones
+   */
+  private canExecute(): boolean {
+    const now = Date.now();
+    
+    switch (this.circuitBreaker.state) {
+      case 'closed':
+        return true;
+        
+      case 'open':
+        if (now >= this.circuitBreaker.nextAttemptTime) {
+          this.circuitBreaker = { ...this.circuitBreaker, state: 'half-open' };
+          return true;
+        }
+        return false;
+        
+      case 'half-open':
+        return true;
+        
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Registra un fallo para el circuit breaker
+   */
+  private recordFailure(): void {
+    const now = Date.now();
+    const newFailureCount = this.circuitBreaker.failureCount + 1;
+    
+    if (newFailureCount >= this.CIRCUIT_BREAKER_THRESHOLD) {
+      this.circuitBreaker = {
+        state: 'open',
+        failureCount: newFailureCount,
+        lastFailureTime: now,
+        nextAttemptTime: now + this.CIRCUIT_BREAKER_TIMEOUT
+      };
+      console.warn(`[CIRCUIT-BREAKER] Circuito abierto después de ${newFailureCount} fallos`);
+    } else {
+      this.circuitBreaker = {
+        ...this.circuitBreaker,
+        failureCount: newFailureCount,
+        lastFailureTime: now
+      };
+    }
+  }
+
+  /**
+   * Registra un éxito para el circuit breaker
+   */
+  private recordSuccess(): void {
+    if (this.circuitBreaker.state === 'half-open') {
+      this.circuitBreaker = {
+        state: 'closed',
+        failureCount: 0,
+        lastFailureTime: 0,
+        nextAttemptTime: 0
+      };
+      console.log('[CIRCUIT-BREAKER] Circuito cerrado - Servicio restaurado');
+    } else if (this.circuitBreaker.failureCount > 0) {
+      this.circuitBreaker = {
+        ...this.circuitBreaker,
+        failureCount: Math.max(0, this.circuitBreaker.failureCount - 1)
+      };
+    }
+  }
+
+  /**
+   * Añade operación a la cola de prioridad para archivos críticos
+   */
+  private async addToPriorityQueue<T>(
+    operation: () => Promise<T>,
+    context?: { uploadId?: string; chunkIndex?: number; priority?: 'urgent' | 'high' | 'normal' | 'low' }
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const queueItem: PriorityQueueItem = {
+        id: `queue_${Date.now()}_${Math.random().toString(36)}`,
+        operation: async () => {
+          try {
+            const result = await operation();
+            resolve(result);
+            return result;
+          } catch (error) {
+            reject(error);
+            throw error;
+          }
+        },
+        priority: context?.priority || 'normal',
+        uploadId: context?.uploadId || 'unknown',
+        retryCount: 0,
+        addedAt: Date.now()
+      };
+
+      // Insertar en orden de prioridad
+      const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
+      const insertIndex = this.priorityQueue.findIndex(
+        item => priorityOrder[item.priority] > priorityOrder[queueItem.priority]
+      );
+      
+      if (insertIndex === -1) {
+        this.priorityQueue.push(queueItem);
+      } else {
+        this.priorityQueue.splice(insertIndex, 0, queueItem);
+      }
+
+      console.log(`[PRIORITY-QUEUE] Archivo ${queueItem.priority} añadido a cola (${this.priorityQueue.length} pendientes)`);
+      
+      // Procesar cola si no está siendo procesada
+      if (!this.isProcessingQueue) {
+        this.processPriorityQueue();
+      }
+    });
+  }
+
+  /**
+   * Procesa la cola de prioridad cuando el circuit breaker se recupere
+   */
+  private async processPriorityQueue(): Promise<void> {
+    if (this.isProcessingQueue || this.priorityQueue.length === 0) {
+      return;
+    }
+
+    this.isProcessingQueue = true;
+    console.log(`[PRIORITY-QUEUE] Procesando ${this.priorityQueue.length} elementos en cola`);
+
+    while (this.priorityQueue.length > 0 && this.canExecute()) {
+      const item = this.priorityQueue.shift();
+      if (!item) break;
+
+      try {
+        await item.operation();
+        this.recordSuccess();
+        console.log(`[PRIORITY-QUEUE] Elemento ${item.priority} procesado exitosamente`);
+      } catch (error) {
+        this.recordFailure();
+        
+        // Reintentare elementos críticos
+        if ((item.priority === 'urgent' || item.priority === 'high') && item.retryCount < 3) {
+          const retryItem = { ...item, retryCount: item.retryCount + 1 };
+          this.priorityQueue.unshift(retryItem);
+          console.warn(`[PRIORITY-QUEUE] Reintentando elemento ${item.priority} (intento ${retryItem.retryCount}/3)`);
+        } else {
+          console.error(`[PRIORITY-QUEUE] Elemento ${item.priority} falló definitivamente:`, error);
+        }
+      }
+
+      // Esperar un poco entre elementos para no saturar
+      await this.sleep(100);
+    }
+
+    this.isProcessingQueue = false;
+    
+    // Si quedan elementos, programar siguiente procesamiento
+    if (this.priorityQueue.length > 0) {
+      setTimeout(() => this.processPriorityQueue(), 5000);
+    }
+  }
+
+  /**
+   * Obtiene estadísticas del circuit breaker y cola de prioridad
+   */
+  getSystemHealth(): {
+    circuitBreaker: CircuitBreakerState;
+    queueLength: number;
+    queueByPriority: Record<string, number>;
+  } {
+    const queueByPriority = this.priorityQueue.reduce((acc, item) => {
+      acc[item.priority] = (acc[item.priority] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      circuitBreaker: this.circuitBreaker,
+      queueLength: this.priorityQueue.length,
+      queueByPriority
+    };
   }
 
   private sleep(ms: number): Promise<void> {
