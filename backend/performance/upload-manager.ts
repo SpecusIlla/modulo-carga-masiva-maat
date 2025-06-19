@@ -172,7 +172,7 @@ export class UploadManager {
         startTime: Date.now(),
         lastActivity: Date.now(),
         metadata: metadata || {},
-        compressed: fileSize > 1024 * 1024, // Compress files > 1MB
+        compressed: this.shouldCompressFile(fileName, fileSize),
         encrypted: metadata?.encrypt === true
       };
 
@@ -256,8 +256,17 @@ export class UploadManager {
         }
       }
 
-      // Store chunk
-      session.chunks.set(chunkNumber, processedChunk);
+      // Gestión inteligente de memoria - usar disco para archivos grandes
+      if (session.fileSize > 50 * 1024 * 1024) { // >50MB
+        // Guardar chunk en disco temporal
+        const chunkPath = join(this.TEMP_DIR, `${session.uploadId}_chunk_${chunkNumber}`);
+        await fs.writeFile(chunkPath, processedChunk);
+        console.log(`[UPLOAD-MANAGER] Large file chunk saved to disk: ${chunkPath}`);
+      } else {
+        // Archivos pequeños en memoria (más rápido)
+        session.chunks.set(chunkNumber, processedChunk);
+      }
+      
       session.chunksReceived.add(chunkNumber);
 
       console.log(`[UPLOAD-MANAGER] Chunk ${chunkNumber}/${totalChunks} received for ${uploadId}`);
@@ -292,6 +301,11 @@ export class UploadManager {
     const finalPath = join('uploads', `${session.uploadId}_${session.fileName}`);
     
     try {
+      // Para archivos grandes, usar streaming directo desde chunks temporales
+      if (session.fileSize > 50 * 1024 * 1024) { // >50MB
+        return await this.assembleFileStream(session, finalPath);
+      }
+      
       // Create write stream for final file
       const writeStream = createWriteStream(finalPath);
       
@@ -316,6 +330,59 @@ export class UploadManager {
       if (!scanResult.isClean) {
         // Move to quarantine
         const quarantinePath = join('quarantine', `${session.uploadId}_${session.fileName}`);
+
+
+  // Método optimizado para archivos grandes - streaming directo
+  private async assembleFileStream(session: UploadSession, finalPath: string): Promise<string> {
+    const writeStream = createWriteStream(finalPath);
+    const hashCalculator = createHash('sha256');
+    
+    try {
+      // Stream chunks en orden sin cargarlos todos en memoria
+      for (let i = 0; i < session.totalChunks; i++) {
+        const chunkPath = join(this.TEMP_DIR, `${session.uploadId}_chunk_${i}`);
+        
+        if (existsSync(chunkPath)) {
+          // Stream chunk desde disco directamente
+          const chunkStream = createReadStream(chunkPath);
+          
+          // Pipeline para hash y escritura simultánea
+          await pipeline(
+            chunkStream,
+            new Transform({
+              transform(chunk, encoding, callback) {
+                hashCalculator.update(chunk);
+                this.push(chunk);
+                callback();
+              }
+            }),
+            writeStream,
+            { end: false } // No cerrar writeStream entre chunks
+          );
+          
+          // Limpiar chunk temporal inmediatamente
+          await fs.unlink(chunkPath).catch(console.error);
+        }
+      }
+      
+      writeStream.end();
+      
+      // Esperar finalización
+      await new Promise((resolve, reject) => {
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+      
+      console.log(`[UPLOAD-MANAGER] Large file assembled via streaming: ${finalPath}`);
+      return finalPath;
+      
+    } catch (error) {
+      console.error('[UPLOAD-MANAGER] Streaming assembly failed:', error);
+      writeStream.destroy();
+      throw error;
+    }
+  }
+
         require('fs').renameSync(finalPath, quarantinePath);
         throw new Error(`File contains threats: ${scanResult.threats.join(', ')}`);
       }
@@ -530,6 +597,33 @@ export class UploadManager {
   getActiveUploads(): any[] {
     return Array.from(this.uploadSessions.values()).map(session => ({
       uploadId: session.uploadId,
+
+
+  // Lógica de compresión adaptativa basada en tamaño y tipo
+  private shouldCompressFile(fileName: string, fileSize: number): boolean {
+    const ext = path.extname(fileName).toLowerCase();
+    
+    // No comprimir archivos ya comprimidos o binarios
+    const skipCompression = ['.zip', '.rar', '.7z', '.gz', '.jpg', '.jpeg', '.png', '.mp4', '.avi'];
+    if (skipCompression.includes(ext)) {
+      return false;
+    }
+    
+    // Comprimir archivos de texto grandes
+    const textFiles = ['.txt', '.json', '.csv', '.xml', '.html', '.css', '.js', '.ts'];
+    if (textFiles.includes(ext) && fileSize > 1024 * 1024) { // >1MB
+      return true;
+    }
+    
+    // Comprimir documentos grandes
+    const documentFiles = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
+    if (documentFiles.includes(ext) && fileSize > 5 * 1024 * 1024) { // >5MB
+      return true;
+    }
+    
+    return false;
+  }
+
       fileName: session.fileName,
       progress: (session.chunksReceived.size / session.totalChunks) * 100,
       elapsed: Date.now() - session.startTime,
@@ -542,13 +636,51 @@ export class UploadManager {
     const sessions = Array.from(this.uploadSessions.values());
     const completedUploads = sessions.length;
     
+    // Calcular métricas por tamaño de archivo
+    const largeFiles = sessions.filter(s => s.fileSize > 50 * 1024 * 1024);
+    const smallFiles = sessions.filter(s => s.fileSize <= 50 * 1024 * 1024);
+    
     return {
       activeUploads: sessions.length,
       cacheStats: this.getCacheStats(),
       averageUploadTime: completedUploads > 0 ? 
         sessions.reduce((sum, s) => sum + (Date.now() - s.startTime), 0) / completedUploads : 0,
       totalBandwidthSaved: this.calculateBandwidthSaved(),
-      compressionRatio: this.calculateCompressionRatio()
+      compressionRatio: this.calculateCompressionRatio(),
+
+
+  // Calcular uso del directorio temporal
+  private calculateTempDirUsage(): number {
+    try {
+      const files = require('fs').readdirSync(this.TEMP_DIR);
+      let totalSize = 0;
+      
+      for (const file of files) {
+        try {
+          const stats = require('fs').statSync(join(this.TEMP_DIR, file));
+          totalSize += stats.size;
+        } catch (error) {
+          // Archivo podría haberse eliminado
+        }
+      }
+      
+      return totalSize;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+      largeFileMetrics: {
+        count: largeFiles.length,
+        averageSize: largeFiles.length > 0 ? 
+          largeFiles.reduce((sum, s) => sum + s.fileSize, 0) / largeFiles.length : 0,
+        streamingActive: largeFiles.filter(s => s.chunksReceived.size < s.totalChunks).length
+      },
+      memoryOptimization: {
+        diskBasedChunks: largeFiles.length,
+        memoryBasedChunks: smallFiles.length,
+        tempDirUsage: this.calculateTempDirUsage()
+      }
     };
   }
 
