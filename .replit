@@ -8,7 +8,7 @@ channel = "stable-24_05"
 run = ["sh", "-c", "node index.js"]
 
 [workflows]
-runButton = "Build and Run"
+runButton = "Demo Server"
 
 [[workflows.workflow]]
 name = "Build and Run"
@@ -22,3 +22,12 @@ args = "npx tsc"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node index.js"
+
+[[workflows.workflow]]
+name = "Demo Server"
+author = 43124978
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node server.js"
