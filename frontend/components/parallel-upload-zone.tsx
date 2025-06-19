@@ -18,7 +18,10 @@ import {
   HardDrive,
   Network,
   Timer,
-  FileText
+  FileText,
+  Wifi,
+  RotateCcw,
+  Shield
 } from "lucide-react";
 
 interface UploadFile {
@@ -26,7 +29,7 @@ interface UploadFile {
   file: File;
   uploadId?: string;
   progress: number;
-  status: 'queued' | 'uploading' | 'paused' | 'completed' | 'error' | 'cached';
+  status: 'queued' | 'uploading' | 'paused' | 'completed' | 'error' | 'cached' | 'recovering' | 'retrying';
   error?: string;
   chunks: number;
   chunksUploaded: number;
@@ -34,6 +37,10 @@ interface UploadFile {
   estimatedTime: number; // seconds
   compressed: boolean;
   encrypted: boolean;
+  retryCount: number;
+  networkQuality?: 'excellent' | 'good' | 'fair' | 'poor';
+  isResumable: boolean;
+  priority: 'urgent' | 'high' | 'normal' | 'low';
 }
 
 interface PerformanceMetrics {
@@ -42,6 +49,12 @@ interface PerformanceMetrics {
   compressionRatio: number;
   cacheHitRate: number;
   averageSpeed: number;
+}
+
+interface NetworkHealth {
+  online: boolean;
+  latency: number;
+  quality: 'excellent' | 'good' | 'fair' | 'poor';
 }
 
 export default function ParallelUploadZone() {
@@ -55,11 +68,18 @@ export default function ParallelUploadZone() {
     cacheHitRate: 0,
     averageSpeed: 0
   });
+  const [networkHealth, setNetworkHealth] = useState<NetworkHealth>({
+    online: true,
+    latency: 25,
+    quality: 'excellent'
+  });
+  const [recoveringSessions, setRecoveringSessions] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
   const MAX_PARALLEL_UPLOADS = 3;
+  const MAX_RETRIES = 3;
 
   // Generate unique ID for files
   const generateFileId = () => `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -101,7 +121,10 @@ export default function ParallelUploadZone() {
       speed: 0,
       estimatedTime: 0,
       compressed: file.size > 1024 * 1024, // Compress files > 1MB
-      encrypted: false
+      encrypted: false,
+      retryCount: 0,
+      isResumable: file.size > 25 * 1024 * 1024, // Enable resumable uploads for files > 25MB
+      priority: 'normal' as const
     }));
 
     setFiles(prev => [...prev, ...newFiles]);
@@ -126,7 +149,7 @@ export default function ParallelUploadZone() {
       });
 
       const data = await response.json();
-      
+
       if (data.cached) {
         // File was found in cache
         updateFileStatus(file.id, {
@@ -172,6 +195,10 @@ export default function ParallelUploadZone() {
       const uploadTime = (Date.now() - startTime) / 1000;
       const speed = chunk.size / uploadTime;
 
+      // Simulate network quality (remove in production)
+      const randomQuality = ['excellent', 'good', 'fair', 'poor'][Math.floor(Math.random() * 4)];
+      updateFileStatus(file.id, { networkQuality: randomQuality });
+
       // Update progress and speed
       updateFileStatus(file.id, {
         chunksUploaded: data.totalReceived,
@@ -188,17 +215,22 @@ export default function ParallelUploadZone() {
     }
   };
 
-  // Upload file with chunked streaming
+  // Upload file with chunked streaming and retry logic
   const uploadFile = async (file: UploadFile) => {
-    if (file.status !== 'queued' && file.status !== 'paused') return;
+    if (file.status !== 'queued' && file.status !== 'paused' && file.status !== 'retrying') return;
 
     updateFileStatus(file.id, { status: 'uploading' });
 
     // Initialize upload session
-    const uploadId = await initializeUpload(file);
-    if (!uploadId) return; // File was cached or error occurred
-
-    updateFileStatus(file.id, { uploadId });
+    let uploadId = file.uploadId;
+    if (!uploadId) {
+      uploadId = await initializeUpload(file);
+      if (!uploadId) {
+        // File was cached or error occurred
+        return;
+      }
+      updateFileStatus(file.id, { uploadId });
+    }
 
     // Upload chunks sequentially with proper error handling
     for (let chunkNumber = file.chunksUploaded; chunkNumber < file.chunks; chunkNumber++) {
@@ -214,8 +246,46 @@ export default function ParallelUploadZone() {
           description: `${file.file.name} se ha subido correctamente`,
         });
         break;
+      } else if (file.status === 'error') {
+        // Retry the upload
+        if (file.retryCount < MAX_RETRIES) {
+          retryUpload(file.id);
+        }
+        break;
       }
     }
+  };
+
+  // Retry upload
+  const retryUpload = async (fileId: string) => {
+    const file = files.find(f => f.id === fileId);
+    if (!file) return;
+
+    updateFileStatus(fileId, { 
+      status: 'retrying', 
+      retryCount: file.retryCount + 1,
+      progress: 0,
+      chunksUploaded: 0,
+      error: undefined
+    });
+
+    // Wait for a bit before retrying
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    updateFileStatus(fileId, { status: 'queued' });
+    startUploads();
+  };
+
+  // Resume recoverable uploads
+  const resumeRecoverableUploads = () => {
+    setFiles(prev => prev.map(file => {
+      if (file.status === 'recovering') {
+        return { ...file, status: 'queued' };
+      }
+      return file;
+    }));
+    setRecoveringSessions(0);
+    startUploads();
   };
 
   // Update file status
@@ -225,24 +295,38 @@ export default function ParallelUploadZone() {
     ));
   };
 
+  // Set file priority
+  const setFilePriority = (fileId: string, priority: UploadFile['priority']) => {
+    setFiles(prev => prev.map(f =>
+      f.id === fileId ? { ...f, priority } : f
+    ));
+  };
+
   // Start parallel uploads
   const startUploads = async () => {
     setIsUploading(true);
     setIsPaused(false);
 
-    const queuedFiles = files.filter(f => f.status === 'queued' || f.status === 'paused');
+    const queuedFiles = files.filter(f => f.status === 'queued' || f.status === 'paused' || f.status === 'retrying');
+
+    // Sort files based on priority (urgent > high > normal > low)
+    queuedFiles.sort((a, b) => {
+      const priorityOrder = { urgent: 1, high: 2, normal: 3, low: 4 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+
     const uploadPromises = queuedFiles.slice(0, MAX_PARALLEL_UPLOADS).map(file => uploadFile(file));
 
     // Process remaining files as slots become available
     let currentIndex = MAX_PARALLEL_UPLOADS;
-    
+
     while (currentIndex < queuedFiles.length) {
       await Promise.race(uploadPromises);
-      
+
       // Find completed uploads and start new ones
       const stillUploading = files.filter(f => f.status === 'uploading').length;
       const slotsAvailable = MAX_PARALLEL_UPLOADS - stillUploading;
-      
+
       for (let i = 0; i < slotsAvailable && currentIndex < queuedFiles.length; i++) {
         uploadPromises.push(uploadFile(queuedFiles[currentIndex]));
         currentIndex++;
@@ -257,7 +341,7 @@ export default function ParallelUploadZone() {
   const togglePause = () => {
     const newPausedState = !isPaused;
     setIsPaused(newPausedState);
-    
+
     if (newPausedState) {
       // Pause all uploading files
       files.forEach(file => {
@@ -302,9 +386,29 @@ export default function ParallelUploadZone() {
     }
   };
 
-  // Auto-refresh metrics
+  // Load network health
+  const loadNetworkHealth = async () => {
+    // Simulate network health check (replace with actual network check)
+    const online = Math.random() > 0.1; // Simulate occasional offline
+    const latency = Math.floor(Math.random() * 150); // Simulate latency up to 150ms
+
+    let quality: NetworkHealth['quality'] = 'excellent';
+    if (latency > 100) quality = 'fair';
+    else if (latency > 50) quality = 'good';
+
+    setNetworkHealth({ online, latency, quality });
+  };
+
+  // Auto-refresh metrics and network health
   useEffect(() => {
-    const interval = setInterval(loadPerformanceMetrics, 5000);
+    loadPerformanceMetrics();
+    loadNetworkHealth(); // Load initial network health
+
+    const interval = setInterval(() => {
+      loadPerformanceMetrics();
+      loadNetworkHealth(); // Refresh network health periodically
+    }, 5000);
+
     return () => clearInterval(interval);
   }, []);
 
