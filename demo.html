@@ -1,0 +1,313 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demostración - Módulo de Carga Masiva MAAT</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .upload-zone {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .upload-zone.drag-over {
+            border-color: #4299e1;
+            background-color: #ebf8ff;
+        }
+        .file-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 8px 0;
+        }
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: #4299e1;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useCallback } = React;
+
+        function BulkUploadDemo() {
+            const [files, setFiles] = useState([]);
+            const [isDragging, setIsDragging] = useState(false);
+            const [uploadStats, setUploadStats] = useState({
+                totalFiles: 0,
+                uploadedFiles: 0,
+                totalSize: 0,
+                uploadedSize: 0
+            });
+            const fileInputRef = useRef(null);
+
+            const handleDragOver = useCallback((e) => {
+                e.preventDefault();
+                setIsDragging(true);
+            }, []);
+
+            const handleDragLeave = useCallback((e) => {
+                e.preventDefault();
+                setIsDragging(false);
+            }, []);
+
+            const handleDrop = useCallback((e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                
+                const droppedFiles = Array.from(e.dataTransfer.files);
+                addFiles(droppedFiles);
+            }, []);
+
+            const handleFileSelect = useCallback((e) => {
+                const selectedFiles = Array.from(e.target.files);
+                addFiles(selectedFiles);
+            }, []);
+
+            const addFiles = (newFiles) => {
+                const fileItems = newFiles.map(file => ({
+                    id: Math.random().toString(36).substr(2, 9),
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    status: 'pending',
+                    progress: 0,
+                    category: classifyFile(file.name),
+                    hash: null
+                }));
+
+                setFiles(prev => [...prev, ...fileItems]);
+                setUploadStats(prev => ({
+                    ...prev,
+                    totalFiles: prev.totalFiles + newFiles.length,
+                    totalSize: prev.totalSize + newFiles.reduce((sum, f) => sum + f.size, 0)
+                }));
+
+                // Simular upload automático
+                fileItems.forEach(item => simulateUpload(item));
+            };
+
+            const classifyFile = (filename) => {
+                const ext = filename.split('.').pop().toLowerCase();
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'Imágenes';
+                if (['pdf', 'doc', 'docx', 'txt'].includes(ext)) return 'Documentos';
+                if (['mp4', 'avi', 'mov', 'mkv'].includes(ext)) return 'Videos';
+                return 'Otros';
+            };
+
+            const simulateUpload = (fileItem) => {
+                let progress = 0;
+                setFiles(prev => prev.map(f => 
+                    f.id === fileItem.id ? { ...f, status: 'uploading' } : f
+                ));
+
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        setFiles(prev => prev.map(f => 
+                            f.id === fileItem.id ? { ...f, status: 'completed', progress: 100 } : f
+                        ));
+                        setUploadStats(prev => ({
+                            ...prev,
+                            uploadedFiles: prev.uploadedFiles + 1,
+                            uploadedSize: prev.uploadedSize + fileItem.file.size
+                        }));
+                    } else {
+                        setFiles(prev => prev.map(f => 
+                            f.id === fileItem.id ? { ...f, progress: Math.floor(progress) } : f
+                        ));
+                    }
+                }, 200);
+            };
+
+            const formatFileSize = (bytes) => {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            };
+
+            const getStatusIcon = (status) => {
+                switch (status) {
+                    case 'pending': return '⏳';
+                    case 'uploading': return '📤';
+                    case 'completed': return '✅';
+                    case 'error': return '❌';
+                    default: return '📄';
+                }
+            };
+
+            const getCategoryColor = (category) => {
+                switch (category) {
+                    case 'Imágenes': return 'bg-green-100 text-green-800';
+                    case 'Documentos': return 'bg-blue-100 text-blue-800';
+                    case 'Videos': return 'bg-purple-100 text-purple-800';
+                    default: return 'bg-gray-100 text-gray-800';
+                }
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto p-6">
+                    <header className="text-center mb-8">
+                        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+                            🟡 Módulo de Carga Masiva MAAT v1.0.1
+                        </h1>
+                        <p className="text-gray-600">
+                            Jinn del Equilibrio, la Verdad y la Trazabilidad
+                        </p>
+                    </header>
+
+                    {/* Estadísticas */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white p-4 rounded-lg shadow">
+                            <div className="text-2xl font-bold text-blue-600">{uploadStats.totalFiles}</div>
+                            <div className="text-sm text-gray-500">Archivos Total</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow">
+                            <div className="text-2xl font-bold text-green-600">{uploadStats.uploadedFiles}</div>
+                            <div className="text-sm text-gray-500">Completados</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow">
+                            <div className="text-2xl font-bold text-orange-600">{formatFileSize(uploadStats.totalSize)}</div>
+                            <div className="text-sm text-gray-500">Tamaño Total</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow">
+                            <div className="text-2xl font-bold text-purple-600">
+                                {uploadStats.totalFiles > 0 ? Math.round((uploadStats.uploadedFiles / uploadStats.totalFiles) * 100) : 0}%
+                            </div>
+                            <div className="text-sm text-gray-500">Progreso</div>
+                        </div>
+                    </div>
+
+                    {/* Zona de carga */}
+                    <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <div 
+                            className={`upload-zone ${isDragging ? 'drag-over' : ''}`}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <div className="text-6xl mb-4">📁</div>
+                            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                                Arrastra archivos aquí o haz clic para seleccionar
+                            </h3>
+                            <p className="text-gray-500 mb-4">
+                                Soporta múltiples archivos y carpetas completas
+                            </p>
+                            <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-400">
+                                <span className="px-2 py-1 bg-gray-100 rounded">PDF</span>
+                                <span className="px-2 py-1 bg-gray-100 rounded">DOC</span>
+                                <span className="px-2 py-1 bg-gray-100 rounded">JPG</span>
+                                <span className="px-2 py-1 bg-gray-100 rounded">PNG</span>
+                                <span className="px-2 py-1 bg-gray-100 rounded">MP4</span>
+                                <span className="px-2 py-1 bg-gray-100 rounded">+más</span>
+                            </div>
+                        </div>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            className="hidden"
+                            onChange={handleFileSelect}
+                        />
+                    </div>
+
+                    {/* Lista de archivos */}
+                    {files.length > 0 && (
+                        <div className="bg-white rounded-lg shadow-lg p-6">
+                            <h3 className="text-lg font-semibold mb-4">
+                                Archivos en Cola ({files.length})
+                            </h3>
+                            <div className="max-h-96 overflow-y-auto">
+                                {files.map(file => (
+                                    <div key={file.id} className="file-item">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center space-x-3">
+                                                <span className="text-xl">{getStatusIcon(file.status)}</span>
+                                                <div>
+                                                    <div className="font-medium text-gray-800">{file.name}</div>
+                                                    <div className="text-sm text-gray-500">{formatFileSize(file.size)}</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <span className={`px-2 py-1 text-xs rounded-full ${getCategoryColor(file.category)}`}>
+                                                    {file.category}
+                                                </span>
+                                                <span className="text-sm text-gray-500">{file.progress}%</span>
+                                            </div>
+                                        </div>
+                                        {file.status === 'uploading' && (
+                                            <div className="progress-bar">
+                                                <div 
+                                                    className="progress-fill" 
+                                                    style={{ width: `${file.progress}%` }}
+                                                ></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Funcionalidades */}
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="bg-white p-4 rounded-lg shadow">
+                            <h4 className="font-semibold text-gray-700 mb-2">🔒 Seguridad Avanzada</h4>
+                            <ul className="text-sm text-gray-600 space-y-1">
+                                <li>• Escáner antivirus multicapa</li>
+                                <li>• Encriptación de transferencia</li>
+                                <li>• Auditoría completa</li>
+                            </ul>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow">
+                            <h4 className="font-semibold text-gray-700 mb-2">🚀 Rendimiento</h4>
+                            <ul className="text-sm text-gray-600 space-y-1">
+                                <li>• Carga paralela (10 archivos)</li>
+                                <li>• Detección de duplicados</li>
+                                <li>• Compresión automática</li>
+                            </ul>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow">
+                            <h4 className="font-semibold text-gray-700 mb-2">🧠 IA Integrada</h4>
+                            <ul className="text-sm text-gray-600 space-y-1">
+                                <li>• Clasificación automática</li>
+                                <li>• Análisis de contenido</li>
+                                <li>• Sugerencias inteligentes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<BulkUploadDemo />, document.getElementById('root'));
+    </script>
+</body>
+</html>
