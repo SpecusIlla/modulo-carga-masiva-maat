@@ -4,368 +4,819 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demostración - Módulo de Carga Masiva MAAT</title>
+    <title>MAAT v1.0.1 - Módulo de Carga Masiva Completo</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/lucide-react@0.400.0/dist/umd/lucide-react.js"></script>
     <style>
-        .upload-zone {
-            border: 2px dashed #cbd5e0;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .maat-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .maat-header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .maat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        @media (max-width: 1024px) {
+            .maat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .maat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .maat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.15);
+        }
+        
+        .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
             border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            transition: all 0.3s ease;
-            min-height: 200px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        
+        .button-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+        
+        .button-secondary {
+            background: #f8fafc;
+            color: #475569;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .button-secondary:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        
+        .button-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .button-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .button-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .control-item {
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            gap: 8px;
         }
-        .upload-zone.drag-over {
-            border-color: #4299e1;
-            background-color: #ebf8ff;
+        
+        .label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
         }
-        .file-item {
-            background: white;
-            border: 1px solid #e2e8f0;
+        
+        .select, .input {
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
             border-radius: 6px;
-            padding: 12px;
-            margin: 8px 0;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
         }
+        
+        .select:focus, .input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
         .progress-bar {
-            background: #e2e8f0;
-            border-radius: 4px;
+            width: 100%;
             height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
             overflow: hidden;
+            margin: 16px 0;
         }
+        
         .progress-fill {
-            background: #4299e1;
             height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             transition: width 0.3s ease;
         }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
         .lucide-icon {
-            width: 1rem;
-            height: 1rem;
-            display: inline-block;
-            vertical-align: middle;
+            width: 16px;
+            height: 16px;
         }
-        .lucide-icon-lg {
-            width: 4rem;
-            height: 4rem;
+        
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
         }
-        .lucide-icon-sm {
-            width: 0.75rem;
-            height: 0.75rem;
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 48px 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            margin: 16px 0;
+        }
+        
+        .drop-zone.active {
+            border-color: #667eea;
+            background: #eff6ff;
+            transform: scale(1.02);
+        }
+        
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .performance-indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .indicator {
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .indicator-value {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .indicator-label {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        
+        .network-indicator {
+            color: #10b981;
+        }
+        
+        .memory-indicator {
+            color: #f59e0b;
+        }
+        
+        .speed-indicator {
+            color: #667eea;
+        }
+        
+        .security-indicator {
+            color: #ef4444;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            border: 1px solid #e5e7eb;
+            max-width: 350px;
+            z-index: 1000;
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useRef, useCallback } = React;
+        const { 
+            Upload, FileText, Settings, Play, Pause, RotateCcw, X, CheckCircle, AlertCircle,
+            Zap, Shield, Gauge, HardDrive, Network, Timer, Filter, BarChart3, 
+            Brain, Cpu, MemoryStick, Wifi, Download, Eye, Maximize2, FolderOpen,
+            Link2, Image, Video, File, Plus, Minus, Search, RefreshCw, Info,
+            TrendingUp, Activity, Users, Clock, Server, Database, Lock, Key
+        } = LucideReact;
 
-        // Función helper para crear iconos Lucide
-        const LucideIcon = ({ name, className = "lucide-icon" }) => {
-            return React.createElement('i', {
-                'data-lucide': name,
-                className: className,
-                ref: (el) => {
-                    if (el && typeof lucide !== 'undefined') {
-                        lucide.createIcons();
-                    }
-                }
-            });
-        };
+        function CompleteMAATInterface() {
+            const [uploadMode, setUploadMode] = React.useState('bulk');
+            const [isUploading, setIsUploading] = React.useState(false);
+            const [isPaused, setIsPaused] = React.useState(false);
+            const [progress, setProgress] = React.useState(0);
+            const [files, setFiles] = React.useState([]);
+            const [selectedCategory, setSelectedCategory] = React.useState('');
+            const [compressionEnabled, setCompressionEnabled] = React.useState(true);
+            const [securityLevel, setSecurityLevel] = React.useState('high');
+            const [parallelUploads, setParallelUploads] = React.useState(3);
+            const [networkQuality, setNetworkQuality] = React.useState('excellent');
+            const [memoryUsage, setMemoryUsage] = React.useState(45);
+            const [uploadSpeed, setUploadSpeed] = React.useState(12.5);
+            const [filesProcessed, setFilesProcessed] = React.useState(847);
+            const [threatsBlocked, setThreatsBlocked] = React.useState(12);
+            const [cacheHitRate, setCacheHitRate] = React.useState(78);
+            const [showAdvancedControls, setShowAdvancedControls] = React.useState(false);
+            const [streamingMode, setStreamingMode] = React.useState('zero-memory');
+            const [aiClassification, setAiClassification] = React.useState(true);
 
-        function BulkUploadDemo() {
-            const [files, setFiles] = useState([]);
-            const [isDragging, setIsDragging] = useState(false);
-            const [uploadStats, setUploadStats] = useState({
-                totalFiles: 0,
-                uploadedFiles: 0,
-                totalSize: 0,
-                uploadedSize: 0
-            });
-            const fileInputRef = useRef(null);
+            const categories = [
+                { id: 1, name: 'Documentos Médicos', icon: 'FileText', color: '#ef4444' },
+                { id: 2, name: 'Imágenes Diagnósticas', icon: 'Image', color: '#10b981' },
+                { id: 3, name: 'Videos Educativos', icon: 'Video', color: '#8b5cf6' },
+                { id: 4, name: 'Datos Investigación', icon: 'Database', color: '#f59e0b' },
+                { id: 5, name: 'Reportes Administrativos', icon: 'BarChart3', color: '#06b6d4' }
+            ];
 
-            const handleDragOver = useCallback((e) => {
-                e.preventDefault();
-                setIsDragging(true);
-            }, []);
+            const mockFiles = [
+                { name: 'resonancia_cerebral.dcm', size: '125MB', status: 'uploading', progress: 67 },
+                { name: 'historial_clinico.pdf', size: '2.3MB', status: 'completed', progress: 100 },
+                { name: 'analisis_sangre.xlsx', size: '890KB', status: 'queued', progress: 0 },
+                { name: 'radiografia_torax.jpg', size: '15MB', status: 'error', progress: 0 }
+            ];
 
-            const handleDragLeave = useCallback((e) => {
-                e.preventDefault();
-                setIsDragging(false);
-            }, []);
-
-            const handleDrop = useCallback((e) => {
-                e.preventDefault();
-                setIsDragging(false);
-
-                const droppedFiles = Array.from(e.dataTransfer.files);
-                addFiles(droppedFiles);
-            }, []);
-
-            const handleFileSelect = useCallback((e) => {
-                const selectedFiles = Array.from(e.target.files);
-                addFiles(selectedFiles);
-            }, []);
-
-            const addFiles = (newFiles) => {
-                const fileItems = newFiles.map(file => ({
-                    id: Math.random().toString(36).substr(2, 9),
-                    file: file,
-                    name: file.name,
-                    size: file.size,
-                    status: 'pending',
-                    progress: 0,
-                    category: classifyFile(file.name),
-                    hash: null
-                }));
-
-                setFiles(prev => [...prev, ...fileItems]);
-                setUploadStats(prev => ({
-                    ...prev,
-                    totalFiles: prev.totalFiles + newFiles.length,
-                    totalSize: prev.totalSize + newFiles.reduce((sum, f) => sum + f.size, 0)
-                }));
-
-                // Simular upload automático
-                fileItems.forEach(item => simulateUpload(item));
+            const handleFileSelect = () => {
+                document.getElementById('fileInput').click();
             };
 
-            const classifyFile = (filename) => {
-                const ext = filename.split('.').pop().toLowerCase();
-                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'Imágenes';
-                if (['pdf', 'doc', 'docx', 'txt'].includes(ext)) return 'Documentos';
-                if (['mp4', 'avi', 'mov', 'mkv'].includes(ext)) return 'Videos';
-                return 'Otros';
-            };
-
-            const simulateUpload = (fileItem) => {
-                let progress = 0;
-                setFiles(prev => prev.map(f => 
-                    f.id === fileItem.id ? { ...f, status: 'uploading' } : f
-                ));
-
-                const interval = setInterval(() => {
-                    progress += Math.random() * 15;
-                    if (progress >= 100) {
-                        progress = 100;
-                        clearInterval(interval);
-                        setFiles(prev => prev.map(f => 
-                            f.id === fileItem.id ? { ...f, status: 'completed', progress: 100 } : f
-                        ));
-                        setUploadStats(prev => ({
-                            ...prev,
-                            uploadedFiles: prev.uploadedFiles + 1,
-                            uploadedSize: prev.uploadedSize + fileItem.file.size
-                        }));
-                    } else {
-                        setFiles(prev => prev.map(f => 
-                            f.id === fileItem.id ? { ...f, progress: Math.floor(progress) } : f
-                        ));
-                    }
-                }, 200);
-            };
-
-            const formatFileSize = (bytes) => {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            };
-
-            const getStatusIcon = (status) => {
-                switch (status) {
-                    case 'pending': return <LucideIcon name="clock" className="lucide-icon" />;
-                    case 'uploading': return <LucideIcon name="upload" className="lucide-icon" />;
-                    case 'completed': return <LucideIcon name="check-circle" className="lucide-icon" />;
-                    case 'error': return <LucideIcon name="alert-triangle" className="lucide-icon" />;
-                    default: return <LucideIcon name="file" className="lucide-icon" />;
+            const toggleUpload = () => {
+                if (isUploading) {
+                    setIsPaused(!isPaused);
+                } else {
+                    setIsUploading(true);
+                    // Simular progreso
+                    const interval = setInterval(() => {
+                        setProgress(prev => {
+                            if (prev >= 100) {
+                                clearInterval(interval);
+                                setIsUploading(false);
+                                return 100;
+                            }
+                            return prev + Math.random() * 10;
+                        });
+                    }, 500);
                 }
             };
 
-            const getCategoryColor = (category) => {
-                switch (category) {
-                    case 'Imágenes': return 'bg-green-100 text-green-800';
-                    case 'Documentos': return 'bg-blue-100 text-blue-800';
-                    case 'Videos': return 'bg-purple-100 text-purple-800';
-                    default: return 'bg-gray-100 text-gray-800';
-                }
-            };
-
-            const getFileTypeIcon = (filename) => {
-                const ext = filename.split('.').pop().toLowerCase();
-                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return <LucideIcon name="file-image" className="lucide-icon-sm" />;
-                if (['pdf', 'doc', 'docx', 'txt'].includes(ext)) return <LucideIcon name="file-text" className="lucide-icon-sm" />;
-                if (['mp4', 'avi', 'mov', 'mkv'].includes(ext)) return <LucideIcon name="video" className="lucide-icon-sm" />;
-                return <LucideIcon name="file" className="lucide-icon-sm" />;
+            const resetUpload = () => {
+                setIsUploading(false);
+                setIsPaused(false);
+                setProgress(0);
             };
 
             return (
-                <div className="max-w-6xl mx-auto p-6">
-                    <header className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                            Módulo de Carga Masiva MAAT v1.0.1
-                        </h1>
-                        <p className="text-gray-600">
-                            Jinn del Equilibrio, la Verdad y la Trazabilidad
-                        </p>
-                    </header>
-
-                    {/* Estadísticas */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-white p-4 rounded-lg shadow">
-                            <div className="text-2xl font-bold text-blue-600">{uploadStats.totalFiles}</div>
-                            <div className="text-sm text-gray-500">Archivos Total</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg shadow">
-                            <div className="text-2xl font-bold text-green-600">{uploadStats.uploadedFiles}</div>
-                            <div className="text-sm text-gray-500">Completados</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg shadow">
-                            <div className="text-2xl font-bold text-orange-600">{formatFileSize(uploadStats.totalSize)}</div>
-                            <div className="text-sm text-gray-500">Tamaño Total</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg shadow">
-                            <div className="text-2xl font-bold text-purple-600">
-                                {uploadStats.totalFiles > 0 ? Math.round((uploadStats.uploadedFiles / uploadStats.totalFiles) * 100) : 0}%
+                <div className="maat-container">
+                    {/* Header Principal */}
+                    <div className="maat-header">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                            <div>
+                                <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#1f2937', marginBottom: '8px' }}>
+                                    MAAT v1.0.1 - Sistema de Carga Masiva
+                                </h1>
+                                <p style={{ color: '#6b7280', fontSize: '16px' }}>
+                                    Módulo avanzado con IA integrada, streaming zero-memory y seguridad multicapa
+                                </p>
                             </div>
-                            <div className="text-sm text-gray-500">Progreso</div>
+                            <div className="badge badge-success">
+                                <CheckCircle className="lucide-icon" />
+                                Sistema Operativo
+                            </div>
+                        </div>
+
+                        {/* Barra de Herramientas Principal */}
+                        <div className="toolbar">
+                            <div className="button-group">
+                                <button className="button button-primary" onClick={handleFileSelect}>
+                                    <Upload className="lucide-icon" />
+                                    Seleccionar Archivos
+                                </button>
+                                <button className="button button-secondary">
+                                    <FolderOpen className="lucide-icon" />
+                                    Cargar Carpeta
+                                </button>
+                                <button className="button button-secondary">
+                                    <Link2 className="lucide-icon" />
+                                    Agregar Enlaces
+                                </button>
+                                <button className="button button-secondary" onClick={() => setShowAdvancedControls(!showAdvancedControls)}>
+                                    <Settings className="lucide-icon" />
+                                    Configuración
+                                </button>
+                            </div>
+
+                            <div className="button-group">
+                                <button 
+                                    className={`button ${isUploading ? 'button-warning' : 'button-success'}`}
+                                    onClick={toggleUpload}
+                                >
+                                    {isPaused ? <Play className="lucide-icon" /> : 
+                                     isUploading ? <Pause className="lucide-icon" /> : 
+                                     <Upload className="lucide-icon" />}
+                                    {isPaused ? 'Reanudar' : isUploading ? 'Pausar' : 'Iniciar Carga'}
+                                </button>
+                                <button className="button button-secondary" onClick={resetUpload}>
+                                    <RotateCcw className="lucide-icon" />
+                                    Reiniciar
+                                </button>
+                                <button className="button button-danger">
+                                    <X className="lucide-icon" />
+                                    Cancelar Todo
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Indicadores de Rendimiento */}
+                        <div className="performance-indicators">
+                            <div className="indicator">
+                                <div className={`indicator-value network-indicator`}>{networkQuality}</div>
+                                <div className="indicator-label">
+                                    <Wifi className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                    Red
+                                </div>
+                            </div>
+                            <div className="indicator">
+                                <div className={`indicator-value memory-indicator`}>{memoryUsage}%</div>
+                                <div className="indicator-label">
+                                    <MemoryStick className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                    Memoria
+                                </div>
+                            </div>
+                            <div className="indicator">
+                                <div className={`indicator-value speed-indicator`}>{uploadSpeed} MB/s</div>
+                                <div className="indicator-label">
+                                    <Gauge className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                    Velocidad
+                                </div>
+                            </div>
+                            <div className="indicator">
+                                <div className={`indicator-value security-indicator`}>{threatsBlocked}</div>
+                                <div className="indicator-label">
+                                    <Shield className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                    Amenazas
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Zona de carga */}
-                    <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                        <div 
-                            className={`upload-zone ${isDragging ? 'drag-over' : ''}`}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <div className="mb-4">
-                                <LucideIcon name="upload" className="lucide-icon-lg mx-auto text-gray-400" />
-                            </div>
-                            <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                                Arrastra archivos aquí o haz clic para seleccionar
+                    {/* Controles Avanzados */}
+                    {showAdvancedControls && (
+                        <div className="maat-card" style={{ marginBottom: '24px' }}>
+                            <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                                <Settings className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                                Configuración Avanzada
                             </h3>
-                            <p className="text-gray-500 mb-4">
-                                Soporta múltiples archivos y carpetas completas
-                            </p>
-                            <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-400">
-                                <span className="px-2 py-1 bg-gray-100 rounded flex items-center gap-1">
-                                    <LucideIcon name="file-text" className="lucide-icon-sm" /> PDF
-                                </span>
-                                <span className="px-2 py-1 bg-gray-100 rounded flex items-center gap-1">
-                                    <LucideIcon name="file-text" className="lucide-icon-sm" /> DOC
-                                </span>
-                                <span className="px-2 py-1 bg-gray-100 rounded flex items-center gap-1">
-                                    <LucideIcon name="file-image" className="lucide-icon-sm" /> JPG
-                                </span>
-                                <span className="px-2 py-1 bg-gray-100 rounded flex items-center gap-1">
-                                    <LucideIcon name="file-image" className="lucide-icon-sm" /> PNG
-                                </span>
-                                <span className="px-2 py-1 bg-gray-100 rounded flex items-center gap-1">
-                                    <LucideIcon name="video" className="lucide-icon-sm" /> MP4
-                                </span>
-                                <span className="px-2 py-1 bg-gray-100 rounded">+más</span>
+                            
+                            <div className="controls-grid">
+                                <div className="control-item">
+                                    <label className="label">Modo de Streaming</label>
+                                    <select 
+                                        className="select" 
+                                        value={streamingMode}
+                                        onChange={(e) => setStreamingMode(e.target.value)}
+                                    >
+                                        <option value="zero-memory">Zero-Memory (Recomendado)</option>
+                                        <option value="chunked">Chunked Streaming</option>
+                                        <option value="fallback">Modo Fallback</option>
+                                    </select>
+                                </div>
+                                
+                                <div className="control-item">
+                                    <label className="label">Cargas Paralelas</label>
+                                    <select 
+                                        className="select"
+                                        value={parallelUploads}
+                                        onChange={(e) => setParallelUploads(Number(e.target.value))}
+                                    >
+                                        <option value="1">1 (Dispositivos limitados)</option>
+                                        <option value="2">2 (Balanceado)</option>
+                                        <option value="3">3 (Recomendado)</option>
+                                        <option value="5">5 (Dispositivos potentes)</option>
+                                    </select>
+                                </div>
+                                
+                                <div className="control-item">
+                                    <label className="label">Nivel de Seguridad</label>
+                                    <select 
+                                        className="select"
+                                        value={securityLevel}
+                                        onChange={(e) => setSecurityLevel(e.target.value)}
+                                    >
+                                        <option value="basic">Básico</option>
+                                        <option value="standard">Estándar</option>
+                                        <option value="high">Alto (Recomendado)</option>
+                                        <option value="maximum">Máximo</option>
+                                    </select>
+                                </div>
+                                
+                                <div className="control-item">
+                                    <label className="label">Categoría por Defecto</label>
+                                    <select 
+                                        className="select"
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                    >
+                                        <option value="">Seleccionar...</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            multiple
-                            className="hidden"
-                            onChange={handleFileSelect}
-                        />
-                    </div>
-
-                    {/* Lista de archivos */}
-                    {files.length > 0 && (
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h3 className="text-lg font-semibold mb-4">
-                                Archivos en Cola ({files.length})
-                            </h3>
-                            <div className="max-h-96 overflow-y-auto">
-                                {files.map(file => (
-                                    <div key={file.id} className="file-item">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center space-x-2">
-                                                <span className="text-xl">{getStatusIcon(file.status)}</span>
-                                                <div>
-                                                    <div className="font-medium text-gray-800">{file.name}</div>
-                                                    <div className="text-sm text-gray-500">{formatFileSize(file.size)}</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <span className={`px-2 py-1 text-xs rounded-full ${getCategoryColor(file.category)}`}>
-                                                    {file.category}
-                                                </span>
-                                                <span className="text-sm text-gray-500">{file.progress}%</span>
-                                            </div>
-                                        </div>
-                                        {file.status === 'uploading' && (
-                                            <div className="progress-bar">
-                                                <div 
-                                                    className="progress-fill" 
-                                                    style={{ width: `${file.progress}%` }}
-                                                ></div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                            
+                            <div className="button-group" style={{ marginTop: '16px' }}>
+                                <button 
+                                    className={`button ${compressionEnabled ? 'button-success' : 'button-secondary'}`}
+                                    onClick={() => setCompressionEnabled(!compressionEnabled)}
+                                >
+                                    <Zap className="lucide-icon" />
+                                    Compresión: {compressionEnabled ? 'ON' : 'OFF'}
+                                </button>
+                                <button 
+                                    className={`button ${aiClassification ? 'button-success' : 'button-secondary'}`}
+                                    onClick={() => setAiClassification(!aiClassification)}
+                                >
+                                    <Brain className="lucide-icon" />
+                                    IA Clasificación: {aiClassification ? 'ON' : 'OFF'}
+                                </button>
+                                <button className="button button-secondary">
+                                    <Eye className="lucide-icon" />
+                                    Vista Previa
+                                </button>
+                                <button className="button button-secondary">
+                                    <Download className="lucide-icon" />
+                                    Exportar Config
+                                </button>
                             </div>
                         </div>
                     )}
 
-                    {/* Funcionalidades */}
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="bg-white p-4 rounded-lg shadow">
-                            <div className="flex items-center gap-2 mb-2">
-                                <LucideIcon name="alert-triangle" className="lucide-icon text-red-500" />
-                                <h4 className="font-semibold text-gray-700">Seguridad Avanzada</h4>
+                    <div className="maat-grid">
+                        {/* Panel de Carga */}
+                        <div className="maat-card">
+                            <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: '600' }}>
+                                <Upload className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                                Zona de Carga Masiva
+                            </h2>
+                            
+                            {/* Zona de Drop */}
+                            <div className="drop-zone">
+                                <Upload style={{ width: '48px', height: '48px', margin: '0 auto 16px', color: '#9ca3af' }} />
+                                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+                                    Arrastra archivos aquí
+                                </h3>
+                                <p style={{ color: '#6b7280', marginBottom: '16px' }}>
+                                    Soporta hasta 100MB por archivo • PDF, DOC, XLSX, JPG, MP4, DICOM
+                                </p>
+                                <div className="button-group" style={{ justifyContent: 'center' }}>
+                                    <button className="button button-primary" onClick={handleFileSelect}>
+                                        <Plus className="lucide-icon" />
+                                        Seleccionar Archivos
+                                    </button>
+                                    <button className="button button-secondary">
+                                        <FolderOpen className="lucide-icon" />
+                                        Carpeta Completa
+                                    </button>
+                                </div>
                             </div>
-                            <ul className="text-sm text-gray-600 space-y-1">
-                                <li>• Escáner antivirus multicapa</li>
-                                <li>• Encriptación de transferencia</li>
-                                <li>• Auditoría completa</li>
-                            </ul>
+
+                            {/* Progreso Global */}
+                            <div style={{ marginTop: '16px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                    <span style={{ fontSize: '14px', fontWeight: '600' }}>Progreso Global</span>
+                                    <span style={{ fontSize: '14px', color: '#6b7280' }}>{Math.round(progress)}%</span>
+                                </div>
+                                <div className="progress-bar">
+                                    <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                                </div>
+                            </div>
+
+                            {/* Lista de Archivos */}
+                            <div className="file-list">
+                                <h4 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>
+                                    Archivos en Cola ({mockFiles.length})
+                                </h4>
+                                {mockFiles.map((file, index) => (
+                                    <div key={index} className="file-item">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <FileText className="lucide-icon" />
+                                            <div>
+                                                <div style={{ fontSize: '13px', fontWeight: '500' }}>{file.name}</div>
+                                                <div style={{ fontSize: '11px', color: '#6b7280' }}>{file.size}</div>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span className={`badge badge-${
+                                                file.status === 'completed' ? 'success' :
+                                                file.status === 'uploading' ? 'info' :
+                                                file.status === 'error' ? 'error' : 'warning'
+                                            }`}>
+                                                {file.status === 'completed' && <CheckCircle className="lucide-icon" />}
+                                                {file.status === 'error' && <AlertCircle className="lucide-icon" />}
+                                                {file.status === 'uploading' && `${file.progress}%`}
+                                                {file.status === 'queued' && 'En cola'}
+                                                {file.status === 'completed' && 'Completado'}
+                                                {file.status === 'error' && 'Error'}
+                                            </span>
+                                            <button className="button" style={{ padding: '4px 8px', fontSize: '12px' }}>
+                                                <X className="lucide-icon" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div className="bg-white p-4 rounded-lg shadow">
-                            <div className="flex items-center gap-2 mb-2">
-                                <LucideIcon name="zap" className="lucide-icon text-yellow-500" />
-                                <h4 className="font-semibold text-gray-700">Rendimiento</h4>
+
+                        {/* Panel de Estadísticas y Control */}
+                        <div className="maat-card">
+                            <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: '600' }}>
+                                <BarChart3 className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                                Dashboard de Rendimiento
+                            </h2>
+
+                            {/* Estadísticas Principales */}
+                            <div className="stats-grid">
+                                <div className="stat-item">
+                                    <div className="stat-value">{filesProcessed}</div>
+                                    <div className="stat-label">Archivos Procesados</div>
+                                </div>
+                                <div className="stat-item">
+                                    <div className="stat-value">{cacheHitRate}%</div>
+                                    <div className="stat-label">Cache Hit Rate</div>
+                                </div>
+                                <div className="stat-item">
+                                    <div className="stat-value">{threatsBlocked}</div>
+                                    <div className="stat-label">Amenazas Bloqueadas</div>
+                                </div>
+                                <div className="stat-item">
+                                    <div className="stat-value">2.3GB</div>
+                                    <div className="stat-label">Datos Comprimidos</div>
+                                </div>
                             </div>
-                            <ul className="text-sm text-gray-600 space-y-1">
-                                <li>• Carga paralela (10 archivos)</li>
-                                <li>• Detección de duplicados</li>
-                                <li>• Compresión automática</li>
-                            </ul>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg shadow">
-                            <div className="flex items-center gap-2 mb-2">
-                                <LucideIcon name="brain" className="lucide-icon text-purple-500" />
-                                <h4 className="font-semibold text-gray-700">IA Integrada</h4>
+
+                            {/* Controles de Sistema */}
+                            <div style={{ marginTop: '24px' }}>
+                                <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>
+                                    Controles del Sistema
+                                </h3>
+                                <div className="button-group">
+                                    <button className="button button-secondary">
+                                        <Activity className="lucide-icon" />
+                                        Monitor Tiempo Real
+                                    </button>
+                                    <button className="button button-secondary">
+                                        <RefreshCw className="lucide-icon" />
+                                        Limpiar Cache
+                                    </button>
+                                    <button className="button button-secondary">
+                                        <Database className="lucide-icon" />
+                                        Optimizar BD
+                                    </button>
+                                </div>
+                                
+                                <div className="button-group" style={{ marginTop: '12px' }}>
+                                    <button className="button button-secondary">
+                                        <Lock className="lucide-icon" />
+                                        Auditoría Seguridad
+                                    </button>
+                                    <button className="button button-secondary">
+                                        <TrendingUp className="lucide-icon" />
+                                        Reportes
+                                    </button>
+                                    <button className="button button-secondary">
+                                        <Key className="lucide-icon" />
+                                        Gestión Cifrado
+                                    </button>
+                                </div>
                             </div>
-                            <ul className="text-sm text-gray-600 space-y-1">
-                                <li>• Clasificación automática</li>
-                                <li>• Análisis de contenido</li>
-                                <li>• Sugerencias inteligentes</li>
-                            </ul>
+
+                            {/* Estados del Sistema */}
+                            <div style={{ marginTop: '24px' }}>
+                                <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>
+                                    Estado del Sistema
+                                </h3>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '14px' }}>Scanner de Virus</span>
+                                        <span className="badge badge-success">Activo</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '14px' }}>Compresión Adaptativa</span>
+                                        <span className="badge badge-success">Activo</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '14px' }}>IA Clasificación</span>
+                                        <span className="badge badge-success">Activo</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '14px' }}>Rate Limiting</span>
+                                        <span className="badge badge-info">Configurado</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '14px' }}>Streaming Zero-Memory</span>
+                                        <span className="badge badge-success">Optimizado</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Panel de Herramientas Adicionales */}
+                    <div className="maat-card">
+                        <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: '600' }}>
+                            <Settings className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                            Herramientas y Utilidades
+                        </h2>
+                        
+                        <div className="button-group">
+                            <button className="button button-secondary">
+                                <Search className="lucide-icon" />
+                                Buscar Documentos
+                            </button>
+                            <button className="button button-secondary">
+                                <Filter className="lucide-icon" />
+                                Filtros Avanzados
+                            </button>
+                            <button className="button button-secondary">
+                                <Users className="lucide-icon" />
+                                Gestión Usuarios
+                            </button>
+                            <button className="button button-secondary">
+                                <Clock className="lucide-icon" />
+                                Historial Actividad
+                            </button>
+                            <button className="button button-secondary">
+                                <Server className="lucide-icon" />
+                                Estado Servidores
+                            </button>
+                            <button className="button button-secondary">
+                                <Maximize2 className="lucide-icon" />
+                                Vista Completa
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Input oculto para selección de archivos */}
+                    <input 
+                        id="fileInput" 
+                        type="file" 
+                        multiple 
+                        style={{ display: 'none' }}
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.mp4,.avi,.dcm"
+                    />
                 </div>
             );
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<BulkUploadDemo />);
+        root.render(<CompleteMAATInterface />);
     </script>
 </body>
 </html>
