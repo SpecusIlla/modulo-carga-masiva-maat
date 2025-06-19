@@ -1,5 +1,36 @@
-# MÓDULO DE CARGA MASIVA AUTOCONTENIDO v1.0.1
+# MÓDULO DE CARGA MASIVA AUTOCONTENIDO v1.1.0
 🟡 Jinn del Equilibrio, la Verdad y la Trazabilidad
+
+## 🛡️ **ESCÁNER DE VIRUS AVANZADO v1.1.0**
+
+### Nuevas Características de Seguridad
+
+- **🦠 Integración ClamAV**: Escáner antivirus profesional con base de datos actualizable
+- **🔄 Firmas Auto-actualizables**: Sistema automático de actualización cada 6 horas
+- **🔍 Análisis Profundo**: Detección heurística, análisis de entropía y patrones de comportamiento
+- **🔒 Cuarentena Automática**: Sistema avanzado de aislamiento con reportes detallados
+- **📊 Métricas de Rendimiento**: Monitoreo en tiempo real del sistema de seguridad
+
+### Instalación del Escáner
+
+```bash
+# Instalar ClamAV automáticamente
+bash scripts/install-clamav.sh
+
+# Verificar instalación
+node scripts/scanner-diagnostics.js
+```
+
+### Configuración Avanzada
+
+```env
+# Variables de seguridad
+ENABLE_CLAMAV=true
+SIGNATURE_UPDATE_INTERVAL=21600  # 6 horas
+QUARANTINE_RETENTION_DAYS=30
+DEEP_ANALYSIS_ENABLED=true
+SECURITY_ALERTS_ENABLED=true
+```
 
 ## GUÍA DE IMPLEMENTACIÓN PARA AVICEN
 
