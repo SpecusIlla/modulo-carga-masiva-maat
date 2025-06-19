@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAAT v1.0.1 - Módulo de Carga Masiva Completo</title>
+    <title>MAAT v1.0.1 - Sistema Completo de Carga Masiva</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -24,7 +24,7 @@
         }
         
         .maat-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -45,8 +45,21 @@
             margin-bottom: 24px;
         }
         
-        @media (max-width: 1024px) {
-            .maat-grid {
+        .maat-grid-three {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        @media (max-width: 1200px) {
+            .maat-grid-three {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .maat-grid, .maat-grid-three {
                 grid-template-columns: 1fr;
             }
         }
@@ -65,6 +78,10 @@
             box-shadow: 0 12px 48px rgba(0,0,0,0.15);
         }
         
+        .maat-card-small {
+            padding: 16px;
+        }
+        
         .button {
             display: inline-flex;
             align-items: center;
@@ -77,6 +94,11 @@
             font-size: 14px;
             transition: all 0.2s ease;
             text-decoration: none;
+        }
+        
+        .button-sm {
+            padding: 8px 16px;
+            font-size: 12px;
         }
         
         .button-primary {
@@ -147,6 +169,7 @@
             border-radius: 6px;
             font-size: 14px;
             transition: border-color 0.2s ease;
+            width: 100%;
         }
         
         .select:focus, .input:focus {
@@ -172,7 +195,7 @@
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 16px;
             margin-top: 16px;
         }
@@ -322,17 +345,193 @@
             color: #ef4444;
         }
         
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
+        .tabs-container {
             background: white;
             border-radius: 8px;
-            padding: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        
+        .tabs-list {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .tab-trigger {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-trigger.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .tab-content {
+            padding: 24px;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
             border: 1px solid #e5e7eb;
-            max-width: 350px;
-            z-index: 1000;
+            transition: all 0.2s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .feature-description {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .navigation-menu {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .menu-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+        }
+        
+        .menu-item.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .dashboard-stat {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .dashboard-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .dashboard-stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .dashboard-stat-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .change-positive {
+            color: #10b981;
+        }
+        
+        .change-negative {
+            color: #ef4444;
         }
     </style>
 </head>
@@ -345,11 +544,20 @@
             Zap, Shield, Gauge, HardDrive, Network, Timer, Filter, BarChart3, 
             Brain, Cpu, MemoryStick, Wifi, Download, Eye, Maximize2, FolderOpen,
             Link2, Image, Video, File, Plus, Minus, Search, RefreshCw, Info,
-            TrendingUp, Activity, Users, Clock, Server, Database, Lock, Key
+            TrendingUp, Activity, Users, Clock, Server, Database, Lock, Key,
+            AlertTriangle, Monitor, Cloud, Layers, Code, Globe, Camera, Mic,
+            FileImage, Folder, Archive, Share2, Edit3, Trash2, Copy, Move,
+            BookOpen, Map, Calendar, Bell, Mail, Phone, MessageSquare, Star,
+            Heart, Bookmark, Tag, Hash, AtSign, Percent, DollarSign, Euro,
+            PoundSterling, Bitcoin, CreditCard, Wallet, ShoppingCart, Package,
+            Truck, Plane, Train, Car, Bike, Home, Building, Store, Factory,
+            School, Hospital, Church, TreePine, Mountain, Sun, Moon, Cloud2,
+            CloudRain, Snowflake, Wind, Thermometer, Compass, MapPin, Navigation
         } = LucideReact;
 
-        function CompleteMAATInterface() {
-            const [uploadMode, setUploadMode] = React.useState('bulk');
+        function CompleteMAATSystem() {
+            const [activeModule, setActiveModule] = React.useState('upload');
+            const [activeTab, setActiveTab] = React.useState('overview');
             const [isUploading, setIsUploading] = React.useState(false);
             const [isPaused, setIsPaused] = React.useState(false);
             const [progress, setProgress] = React.useState(0);
@@ -377,10 +585,23 @@
             ];
 
             const mockFiles = [
-                { name: 'resonancia_cerebral.dcm', size: '125MB', status: 'uploading', progress: 67 },
-                { name: 'historial_clinico.pdf', size: '2.3MB', status: 'completed', progress: 100 },
-                { name: 'analisis_sangre.xlsx', size: '890KB', status: 'queued', progress: 0 },
-                { name: 'radiografia_torax.jpg', size: '15MB', status: 'error', progress: 0 }
+                { name: 'resonancia_cerebral.dcm', size: '125MB', status: 'uploading', progress: 67, type: 'medical' },
+                { name: 'historial_clinico.pdf', size: '2.3MB', status: 'completed', progress: 100, type: 'document' },
+                { name: 'analisis_sangre.xlsx', size: '890KB', status: 'queued', progress: 0, type: 'data' },
+                { name: 'radiografia_torax.jpg', size: '15MB', status: 'error', progress: 0, type: 'image' },
+                { name: 'video_cirugia.mp4', size: '450MB', status: 'uploading', progress: 23, type: 'video' },
+                { name: 'informe_laboratorio.pdf', size: '5.2MB', status: 'completed', progress: 100, type: 'document' }
+            ];
+
+            const systemModules = [
+                { id: 'upload', name: 'Carga Masiva', icon: Upload, color: '#667eea' },
+                { id: 'performance', name: 'Rendimiento', icon: Activity, color: '#10b981' },
+                { id: 'security', name: 'Seguridad', icon: Shield, color: '#ef4444' },
+                { id: 'ai', name: 'IA Integrada', icon: Brain, color: '#8b5cf6' },
+                { id: 'storage', name: 'Almacenamiento', icon: Database, color: '#f59e0b' },
+                { id: 'network', name: 'Red & Conectividad', icon: Network, color: '#06b6d4' },
+                { id: 'monitoring', name: 'Monitoreo', icon: Monitor, color: '#64748b' },
+                { id: 'admin', name: 'Administración', icon: Settings, color: '#374151' }
             ];
 
             const handleFileSelect = () => {
@@ -392,7 +613,6 @@
                     setIsPaused(!isPaused);
                 } else {
                     setIsUploading(true);
-                    // Simular progreso
                     const interval = setInterval(() => {
                         setProgress(prev => {
                             if (prev >= 100) {
@@ -412,46 +632,69 @@
                 setProgress(0);
             };
 
-            return (
-                <div className="maat-container">
-                    {/* Header Principal */}
-                    <div className="maat-header">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                            <div>
-                                <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#1f2937', marginBottom: '8px' }}>
-                                    MAAT v1.0.1 - Sistema de Carga Masiva
-                                </h1>
-                                <p style={{ color: '#6b7280', fontSize: '16px' }}>
-                                    Módulo avanzado con IA integrada, streaming zero-memory y seguridad multicapa
-                                </p>
+            const ModuleNavigation = () => (
+                <div className="navigation-menu">
+                    <div className="menu-grid">
+                        {systemModules.map((module) => (
+                            <div 
+                                key={module.id}
+                                className={`menu-item ${activeModule === module.id ? 'active' : ''}`}
+                                onClick={() => setActiveModule(module.id)}
+                            >
+                                <module.icon className="lucide-icon" style={{ color: activeModule === module.id ? 'white' : module.color }} />
+                                {module.name}
                             </div>
-                            <div className="badge badge-success">
-                                <CheckCircle className="lucide-icon" />
-                                Sistema Operativo
-                            </div>
-                        </div>
+                        ))}
+                    </div>
+                </div>
+            );
 
-                        {/* Barra de Herramientas Principal */}
-                        <div className="toolbar">
-                            <div className="button-group">
+            const UploadModule = () => (
+                <div className="space-y-6">
+                    {/* Zona de Carga Principal */}
+                    <div className="maat-card">
+                        <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: '600' }}>
+                            <Upload className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                            Zona de Carga Masiva Avanzada
+                        </h2>
+                        
+                        <div className="drop-zone">
+                            <Upload style={{ width: '48px', height: '48px', margin: '0 auto 16px', color: '#9ca3af' }} />
+                            <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+                                Arrastra archivos aquí o selecciona múltiples archivos
+                            </h3>
+                            <p style={{ color: '#6b7280', marginBottom: '16px' }}>
+                                Soporta hasta 100MB por archivo • PDF, DOC, XLSX, JPG, MP4, DICOM • Zero-Memory Streaming
+                            </p>
+                            <div className="button-group" style={{ justifyContent: 'center' }}>
                                 <button className="button button-primary" onClick={handleFileSelect}>
-                                    <Upload className="lucide-icon" />
+                                    <Plus className="lucide-icon" />
                                     Seleccionar Archivos
                                 </button>
                                 <button className="button button-secondary">
                                     <FolderOpen className="lucide-icon" />
-                                    Cargar Carpeta
+                                    Carpeta Completa
                                 </button>
                                 <button className="button button-secondary">
                                     <Link2 className="lucide-icon" />
                                     Agregar Enlaces
                                 </button>
-                                <button className="button button-secondary" onClick={() => setShowAdvancedControls(!showAdvancedControls)}>
-                                    <Settings className="lucide-icon" />
-                                    Configuración
-                                </button>
                             </div>
+                        </div>
 
+                        {/* Progreso Global */}
+                        <div style={{ marginTop: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '14px', fontWeight: '600' }}>Progreso Global</span>
+                                <span style={{ fontSize: '14px', color: '#6b7280' }}>{Math.round(progress)}%</span>
+                            </div>
+                            <div className="progress-bar">
+                                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                            </div>
+                        </div>
+
+                        {/* Controles de Carga */}
+                        <div className="toolbar">
                             <div className="button-group">
                                 <button 
                                     className={`button ${isUploading ? 'button-warning' : 'button-success'}`}
@@ -471,337 +714,748 @@
                                     Cancelar Todo
                                 </button>
                             </div>
+                            
+                            <div className="button-group">
+                                <button className="button button-secondary">
+                                    <Settings className="lucide-icon" />
+                                    Configuración
+                                </button>
+                                <button className="button button-secondary">
+                                    <Brain className="lucide-icon" />
+                                    IA Clasificación
+                                </button>
+                                <button className="button button-secondary">
+                                    <Filter className="lucide-icon" />
+                                    Filtros
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Lista de Archivos */}
+                    <div className="maat-card">
+                        <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                            Archivos en Cola ({mockFiles.length})
+                        </h3>
+                        
+                        <div className="file-list">
+                            {mockFiles.map((file, index) => (
+                                <div key={index} className="file-item">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        {file.type === 'medical' && <FileText className="lucide-icon" style={{ color: '#ef4444' }} />}
+                                        {file.type === 'document' && <FileText className="lucide-icon" style={{ color: '#3b82f6' }} />}
+                                        {file.type === 'image' && <FileImage className="lucide-icon" style={{ color: '#10b981' }} />}
+                                        {file.type === 'video' && <Video className="lucide-icon" style={{ color: '#8b5cf6' }} />}
+                                        {file.type === 'data' && <BarChart3 className="lucide-icon" style={{ color: '#f59e0b' }} />}
+                                        
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
+                                                {file.name}
+                                            </div>
+                                            <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                                {file.size} • {file.type}
+                                            </div>
+                                            {file.status === 'uploading' && (
+                                                <div className="progress-bar" style={{ height: '4px', marginTop: '8px' }}>
+                                                    <div className="progress-fill" style={{ width: `${file.progress}%` }}></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span className={`badge badge-${
+                                            file.status === 'completed' ? 'success' :
+                                            file.status === 'uploading' ? 'info' :
+                                            file.status === 'error' ? 'error' : 'warning'
+                                        }`}>
+                                            {file.status === 'completed' && <CheckCircle className="lucide-icon" />}
+                                            {file.status === 'error' && <AlertCircle className="lucide-icon" />}
+                                            {file.status === 'uploading' && `${file.progress}%`}
+                                            {file.status === 'queued' && 'En cola'}
+                                            {file.status === 'completed' && 'Completado'}
+                                            {file.status === 'error' && 'Error'}
+                                        </span>
+                                        <button className="button button-sm button-secondary">
+                                            <X className="lucide-icon" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const PerformanceModule = () => (
+                <div className="space-y-6">
+                    {/* Métricas en Tiempo Real */}
+                    <div className="dashboard-stats">
+                        <div className="dashboard-stat">
+                            <div className="dashboard-stat-label">Velocidad de Carga</div>
+                            <div className="dashboard-stat-value speed-indicator">{uploadSpeed} MB/s</div>
+                            <div className="dashboard-stat-change change-positive">
+                                <TrendingUp className="lucide-icon" />
+                                +12% desde ayer
+                            </div>
+                        </div>
+                        <div className="dashboard-stat">
+                            <div className="dashboard-stat-label">Uso de Memoria</div>
+                            <div className="dashboard-stat-value memory-indicator">{memoryUsage}%</div>
+                            <div className="dashboard-stat-change change-positive">
+                                <TrendingUp className="lucide-icon" />
+                                Optimizado
+                            </div>
+                        </div>
+                        <div className="dashboard-stat">
+                            <div className="dashboard-stat-label">Cache Hit Rate</div>
+                            <div className="dashboard-stat-value">{cacheHitRate}%</div>
+                            <div className="dashboard-stat-change change-positive">
+                                <TrendingUp className="lucide-icon" />
+                                Excelente
+                            </div>
+                        </div>
+                        <div className="dashboard-stat">
+                            <div className="dashboard-stat-label">Archivos Procesados</div>
+                            <div className="dashboard-stat-value">{filesProcessed}</div>
+                            <div className="dashboard-stat-change change-positive">
+                                <TrendingUp className="lucide-icon" />
+                                +23 hoy
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Gráficos y Monitores */}
+                    <div className="maat-grid">
+                        <div className="maat-card">
+                            <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                                <Activity className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                                Monitor de Sistema
+                            </h3>
+                            
+                            <div className="performance-indicators">
+                                <div className="indicator">
+                                    <div className="indicator-value network-indicator">Excelente</div>
+                                    <div className="indicator-label">
+                                        <Wifi className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                        Red
+                                    </div>
+                                </div>
+                                <div className="indicator">
+                                    <div className="indicator-value memory-indicator">{memoryUsage}%</div>
+                                    <div className="indicator-label">
+                                        <MemoryStick className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                        RAM
+                                    </div>
+                                </div>
+                                <div className="indicator">
+                                    <div className="indicator-value speed-indicator">{uploadSpeed} MB/s</div>
+                                    <div className="indicator-label">
+                                        <Zap className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                        Velocidad
+                                    </div>
+                                </div>
+                                <div className="indicator">
+                                    <div className="indicator-value">2.3GB</div>
+                                    <div className="indicator-label">
+                                        <HardDrive className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                        Procesado
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Indicadores de Rendimiento */}
+                        <div className="maat-card">
+                            <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                                <BarChart3 className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                                Optimizaciones
+                            </h3>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Zero-Memory Streaming</span>
+                                    <span className="badge badge-success">Activo</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Compresión Adaptativa</span>
+                                    <span className="badge badge-success">Activo</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Cache Inteligente</span>
+                                    <span className="badge badge-success">Optimizado</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Cargas Paralelas</span>
+                                    <span className="badge badge-info">{parallelUploads} threads</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const SecurityModule = () => (
+                <div className="space-y-6">
+                    <div className="alert alert-success">
+                        <Shield className="lucide-icon" />
+                        Sistema de seguridad multicapa activo y funcionando correctamente
+                    </div>
+
+                    <div className="maat-grid-three">
+                        <div className="maat-card maat-card-small">
+                            <h4 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>
+                                <Shield className="lucide-icon" style={{ display: 'inline', marginRight: '8px', color: '#10b981' }} />
+                                Scanner de Virus
+                            </h4>
+                            <div style={{ marginBottom: '8px' }}>
+                                <span className="badge badge-success">ClamAV Activo</span>
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                                Escaneando archivos en tiempo real • {threatsBlocked} amenazas bloqueadas
+                            </p>
+                        </div>
+
+                        <div className="maat-card maat-card-small">
+                            <h4 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>
+                                <Lock className="lucide-icon" style={{ display: 'inline', marginRight: '8px', color: '#3b82f6' }} />
+                                Cifrado
+                            </h4>
+                            <div style={{ marginBottom: '8px' }}>
+                                <span className="badge badge-info">AES-256</span>
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                                Cifrado de extremo a extremo para todos los archivos
+                            </p>
+                        </div>
+
+                        <div className="maat-card maat-card-small">
+                            <h4 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>
+                                <Eye className="lucide-icon" style={{ display: 'inline', marginRight: '8px', color: '#f59e0b' }} />
+                                Auditoría
+                            </h4>
+                            <div style={{ marginBottom: '8px' }}>
+                                <span className="badge badge-warning">Registrando</span>
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                                Log completo de todas las actividades del sistema
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="maat-card">
+                        <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                            Configuración de Seguridad
+                        </h3>
+                        
+                        <div className="controls-grid">
+                            <div className="control-item">
+                                <label className="label">Nivel de Seguridad</label>
+                                <select className="select" value={securityLevel} onChange={(e) => setSecurityLevel(e.target.value)}>
+                                    <option value="basic">Básico</option>
+                                    <option value="standard">Estándar</option>
+                                    <option value="high">Alto (Recomendado)</option>
+                                    <option value="maximum">Máximo</option>
+                                </select>
+                            </div>
+                            
+                            <div className="control-item">
+                                <label className="label">Scanner de Virus</label>
+                                <select className="select">
+                                    <option value="enabled">Habilitado</option>
+                                    <option value="disabled">Deshabilitado</option>
+                                </select>
+                            </div>
+                            
+                            <div className="control-item">
+                                <label className="label">Rate Limiting</label>
+                                <select className="select">
+                                    <option value="strict">Estricto</option>
+                                    <option value="moderate">Moderado</option>
+                                    <option value="relaxed">Relajado</option>
+                                </select>
+                            </div>
+                            
+                            <div className="control-item">
+                                <label className="label">Validación de Contenido</label>
+                                <select className="select">
+                                    <option value="enabled">Habilitada</option>
+                                    <option value="disabled">Deshabilitada</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const AIModule = () => (
+                <div className="space-y-6">
+                    <div className="alert alert-info">
+                        <Brain className="lucide-icon" />
+                        Sistema de IA integrado para clasificación automática y análisis de contenido
+                    </div>
+
+                    <div className="maat-grid">
+                        <div className="maat-card">
+                            <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                                <Brain className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                                Clasificación Automática
+                            </h3>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Documentos Médicos</span>
+                                    <span className="badge badge-success">94% precisión</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Imágenes Diagnósticas</span>
+                                    <span className="badge badge-success">97% precisión</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Reportes Administrativos</span>
+                                    <span className="badge badge-success">91% precisión</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Videos Educativos</span>
+                                    <span className="badge badge-warning">En entrenamiento</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="maat-card">
+                            <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                                <Code className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                                Análisis de Contenido
+                            </h3>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Extracción de Metadatos</span>
+                                    <span className="badge badge-success">Activo</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Reconocimiento OCR</span>
+                                    <span className="badge badge-success">Activo</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Análisis de Duplicados</span>
+                                    <span className="badge badge-success">Activo</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Sugerencias Inteligentes</span>
+                                    <span className="badge badge-info">Beta</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="maat-card">
+                        <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                            Configuración de IA
+                        </h3>
+                        
+                        <div className="button-group">
+                            <button 
+                                className={`button ${aiClassification ? 'button-success' : 'button-secondary'}`}
+                                onClick={() => setAiClassification(!aiClassification)}
+                            >
+                                <Brain className="lucide-icon" />
+                                Clasificación Automática: {aiClassification ? 'ON' : 'OFF'}
+                            </button>
+                            <button className="button button-secondary">
+                                <Download className="lucide-icon" />
+                                Entrenar Modelo
+                            </button>
+                            <button className="button button-secondary">
+                                <Eye className="lucide-icon" />
+                                Ver Métricas
+                            </button>
+                            <button className="button button-secondary">
+                                <Settings className="lucide-icon" />
+                                Configurar API
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const StorageModule = () => (
+                <div className="space-y-6">
+                    <div className="dashboard-stats">
+                        <div className="dashboard-stat">
+                            <div className="dashboard-stat-label">Espacio Utilizado</div>
+                            <div className="dashboard-stat-value">2.4 TB</div>
+                            <div className="dashboard-stat-change change-positive">
+                                <TrendingUp className="lucide-icon" />
+                                65% del total
+                            </div>
+                        </div>
+                        <div className="dashboard-stat">
+                            <div className="dashboard-stat-label">Archivos Almacenados</div>
+                            <div className="dashboard-stat-value">15,847</div>
+                            <div className="dashboard-stat-change change-positive">
+                                <TrendingUp className="lucide-icon" />
+                                +234 hoy
+                            </div>
+                        </div>
+                        <div className="dashboard-stat">
+                            <div className="dashboard-stat-label">Compresión</div>
+                            <div className="dashboard-stat-value">34%</div>
+                            <div className="dashboard-stat-change change-positive">
+                                <TrendingUp className="lucide-icon" />
+                                Ahorro de espacio
+                            </div>
+                        </div>
+                        <div className="dashboard-stat">
+                            <div className="dashboard-stat-label">Duplicados Eliminados</div>
+                            <div className="dashboard-stat-value">523</div>
+                            <div className="dashboard-stat-change change-positive">
+                                <TrendingUp className="lucide-icon" />
+                                780MB ahorrados
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="maat-card">
+                        <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                            <Database className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                            Distribución por Categorías
+                        </h3>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {categories.map((category, index) => (
+                                <div key={category.id} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ 
+                                        width: '32px', 
+                                        height: '32px', 
+                                        borderRadius: '8px', 
+                                        backgroundColor: category.color,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <FileText className="lucide-icon" style={{ color: 'white', width: '16px', height: '16px' }} />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
+                                            {category.name}
+                                        </div>
+                                        <div className="progress-bar" style={{ height: '6px' }}>
+                                            <div 
+                                                className="progress-fill" 
+                                                style={{ 
+                                                    width: `${Math.random() * 80 + 20}%`,
+                                                    background: category.color
+                                                }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                        {Math.floor(Math.random() * 5000)} archivos
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const NetworkModule = () => (
+                <div className="space-y-6">
+                    <div className="maat-grid">
+                        <div className="maat-card">
+                            <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                                <Network className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                                Estado de Conectividad
+                            </h3>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Velocidad de Conexión</span>
+                                    <span className="badge badge-success">150 Mbps</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Latencia</span>
+                                    <span className="badge badge-success">12ms</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Estabilidad</span>
+                                    <span className="badge badge-success">99.8%</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Reintentos Automáticos</span>
+                                    <span className="badge badge-info">Activo</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="maat-card">
+                            <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                                <Zap className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                                Optimizaciones de Red
+                            </h3>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Chunking Dinámico</span>
+                                    <span className="badge badge-success">Activo</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Cola de Prioridad</span>
+                                    <span className="badge badge-success">Configurada</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Resumable Upload</span>
+                                    <span className="badge badge-success">Habilitado</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px' }}>Fallback Mode</span>
+                                    <span className="badge badge-warning">Standby</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const MonitoringModule = () => (
+                <div className="space-y-6">
+                    <div className="maat-card">
+                        <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                            <Monitor className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
+                            Logs del Sistema (Tiempo Real)
+                        </h3>
+                        
+                        <div style={{ 
+                            background: '#1f2937', 
+                            color: '#f9fafb', 
+                            padding: '16px', 
+                            borderRadius: '8px',
+                            fontFamily: 'monospace',
+                            fontSize: '12px',
+                            height: '300px',
+                            overflowY: 'auto'
+                        }}>
+                            <div>[2024-01-15 10:45:23] ✅ Archivo subido: resonancia_cerebral.dcm (125MB)</div>
+                            <div>[2024-01-15 10:45:18] 🔍 Scanner de virus: historial_clinico.pdf - Limpio</div>
+                            <div>[2024-01-15 10:45:15] 🧠 IA Clasificación: analisis_sangre.xlsx → Datos Investigación (95%)</div>
+                            <div>[2024-01-15 10:45:12] ⚡ Compresión adaptativa: video_cirugia.mp4 (450MB → 289MB)</div>
+                            <div>[2024-01-15 10:45:08] 📊 Cache hit: documento_frecuente.pdf</div>
+                            <div>[2024-01-15 10:45:05] 🔒 Cifrado AES-256: informe_laboratorio.pdf</div>
+                            <div>[2024-01-15 10:45:02] 🌐 Reintento automático exitoso: conexión_servidor_2</div>
+                            <div>[2024-01-15 10:44:58] 📈 Optimización de memoria: 45% → 38%</div>
+                            <div>[2024-01-15 10:44:55] 🚫 Duplicado detectado: radiografia_torax_copy.jpg</div>
+                            <div>[2024-01-15 10:44:52] ✅ Zero-memory stream iniciado: archivo_grande.mp4</div>
+                        </div>
+                    </div>
+
+                    <div className="maat-grid">
+                        <div className="maat-card">
+                            <h4 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>
+                                Alertas Activas
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div className="alert alert-warning" style={{ padding: '8px 12px', margin: 0 }}>
+                                    <AlertTriangle className="lucide-icon" />
+                                    Uso de memoria alto en servidor-3
+                                </div>
+                                <div className="alert alert-info" style={{ padding: '8px 12px', margin: 0 }}>
+                                    <Info className="lucide-icon" />
+                                    Actualización de definiciones antivirus disponible
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="maat-card">
+                            <h4 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>
+                                Estadísticas de Hoy
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ fontSize: '13px' }}>Archivos procesados:</span>
+                                    <span style={{ fontSize: '13px', fontWeight: '600' }}>234</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ fontSize: '13px' }}>Datos transferidos:</span>
+                                    <span style={{ fontSize: '13px', fontWeight: '600' }}>2.8 GB</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ fontSize: '13px' }}>Tiempo de actividad:</span>
+                                    <span style={{ fontSize: '13px', fontWeight: '600' }}>99.9%</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ fontSize: '13px' }}>Errores:</span>
+                                    <span style={{ fontSize: '13px', fontWeight: '600' }}>0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const AdminModule = () => (
+                <div className="space-y-6">
+                    <div className="feature-grid">
+                        <div className="feature-card">
+                            <div className="feature-icon" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                                <Users className="lucide-icon" style={{ color: 'white' }} />
+                            </div>
+                            <div className="feature-title">Gestión de Usuarios</div>
+                            <div className="feature-description">
+                                Administra permisos, roles y accesos al sistema MAAT
+                            </div>
+                        </div>
+
+                        <div className="feature-card">
+                            <div className="feature-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+                                <Database className="lucide-icon" style={{ color: 'white' }} />
+                            </div>
+                            <div className="feature-title">Base de Datos</div>
+                            <div className="feature-description">
+                                Optimización, respaldos y mantenimiento de la BD
+                            </div>
+                        </div>
+
+                        <div className="feature-card">
+                            <div className="feature-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
+                                <Server className="lucide-icon" style={{ color: 'white' }} />
+                            </div>
+                            <div className="feature-title">Servidores</div>
+                            <div className="feature-description">
+                                Monitor de estado y configuración de servidores
+                            </div>
+                        </div>
+
+                        <div className="feature-card">
+                            <div className="feature-icon" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
+                                <Key className="lucide-icon" style={{ color: 'white' }} />
+                            </div>
+                            <div className="feature-title">Seguridad</div>
+                            <div className="feature-description">
+                                Configuración avanzada de políticas de seguridad
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="maat-card">
+                        <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                            Herramientas de Administración
+                        </h3>
+                        
+                        <div className="button-group">
+                            <button className="button button-secondary">
+                                <RefreshCw className="lucide-icon" />
+                                Limpiar Cache
+                            </button>
+                            <button className="button button-secondary">
+                                <Database className="lucide-icon" />
+                                Optimizar BD
+                            </button>
+                            <button className="button button-secondary">
+                                <Download className="lucide-icon" />
+                                Generar Reporte
+                            </button>
+                            <button className="button button-secondary">
+                                <Settings className="lucide-icon" />
+                                Configuración
+                            </button>
+                            <button className="button button-secondary">
+                                <Activity className="lucide-icon" />
+                                Diagnósticos
+                            </button>
+                            <button className="button button-danger">
+                                <AlertTriangle className="lucide-icon" />
+                                Modo Mantenimiento
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderActiveModule = () => {
+                switch (activeModule) {
+                    case 'upload': return <UploadModule />;
+                    case 'performance': return <PerformanceModule />;
+                    case 'security': return <SecurityModule />;
+                    case 'ai': return <AIModule />;
+                    case 'storage': return <StorageModule />;
+                    case 'network': return <NetworkModule />;
+                    case 'monitoring': return <MonitoringModule />;
+                    case 'admin': return <AdminModule />;
+                    default: return <UploadModule />;
+                }
+            };
+
+            return (
+                <div className="maat-container">
+                    {/* Header Principal */}
+                    <div className="maat-header">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                            <div>
+                                <h1 style={{ fontSize: '32px', fontWeight: '700', color: '#1f2937', marginBottom: '8px' }}>
+                                    Sistema MAAT v1.0.1 - Completo
+                                </h1>
+                                <p style={{ color: '#6b7280', fontSize: '18px' }}>
+                                    Módulo Avanzado de Carga Masiva con IA, Streaming Zero-Memory y Seguridad Multicapa
+                                </p>
+                            </div>
+                            <div className="badge badge-success" style={{ fontSize: '14px', padding: '8px 16px' }}>
+                                <CheckCircle className="lucide-icon" />
+                                Sistema Operativo
+                            </div>
+                        </div>
+
+                        {/* Indicadores de Estado Global */}
                         <div className="performance-indicators">
                             <div className="indicator">
-                                <div className={`indicator-value network-indicator`}>{networkQuality}</div>
+                                <div className="indicator-value network-indicator">Excelente</div>
                                 <div className="indicator-label">
                                     <Wifi className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
-                                    Red
+                                    Conectividad
                                 </div>
                             </div>
                             <div className="indicator">
-                                <div className={`indicator-value memory-indicator`}>{memoryUsage}%</div>
+                                <div className="indicator-value memory-indicator">{memoryUsage}%</div>
                                 <div className="indicator-label">
                                     <MemoryStick className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
                                     Memoria
                                 </div>
                             </div>
                             <div className="indicator">
-                                <div className={`indicator-value speed-indicator`}>{uploadSpeed} MB/s</div>
+                                <div className="indicator-value speed-indicator">{uploadSpeed} MB/s</div>
                                 <div className="indicator-label">
                                     <Gauge className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
                                     Velocidad
                                 </div>
                             </div>
                             <div className="indicator">
-                                <div className={`indicator-value security-indicator`}>{threatsBlocked}</div>
+                                <div className="indicator-value security-indicator">{threatsBlocked}</div>
                                 <div className="indicator-label">
                                     <Shield className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
                                     Amenazas
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Controles Avanzados */}
-                    {showAdvancedControls && (
-                        <div className="maat-card" style={{ marginBottom: '24px' }}>
-                            <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-                                <Settings className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
-                                Configuración Avanzada
-                            </h3>
-                            
-                            <div className="controls-grid">
-                                <div className="control-item">
-                                    <label className="label">Modo de Streaming</label>
-                                    <select 
-                                        className="select" 
-                                        value={streamingMode}
-                                        onChange={(e) => setStreamingMode(e.target.value)}
-                                    >
-                                        <option value="zero-memory">Zero-Memory (Recomendado)</option>
-                                        <option value="chunked">Chunked Streaming</option>
-                                        <option value="fallback">Modo Fallback</option>
-                                    </select>
-                                </div>
-                                
-                                <div className="control-item">
-                                    <label className="label">Cargas Paralelas</label>
-                                    <select 
-                                        className="select"
-                                        value={parallelUploads}
-                                        onChange={(e) => setParallelUploads(Number(e.target.value))}
-                                    >
-                                        <option value="1">1 (Dispositivos limitados)</option>
-                                        <option value="2">2 (Balanceado)</option>
-                                        <option value="3">3 (Recomendado)</option>
-                                        <option value="5">5 (Dispositivos potentes)</option>
-                                    </select>
-                                </div>
-                                
-                                <div className="control-item">
-                                    <label className="label">Nivel de Seguridad</label>
-                                    <select 
-                                        className="select"
-                                        value={securityLevel}
-                                        onChange={(e) => setSecurityLevel(e.target.value)}
-                                    >
-                                        <option value="basic">Básico</option>
-                                        <option value="standard">Estándar</option>
-                                        <option value="high">Alto (Recomendado)</option>
-                                        <option value="maximum">Máximo</option>
-                                    </select>
-                                </div>
-                                
-                                <div className="control-item">
-                                    <label className="label">Categoría por Defecto</label>
-                                    <select 
-                                        className="select"
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                    >
-                                        <option value="">Seleccionar...</option>
-                                        {categories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                        ))}
-                                    </select>
+                            <div className="indicator">
+                                <div className="indicator-value">{filesProcessed}</div>
+                                <div className="indicator-label">
+                                    <File className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                    Archivos
                                 </div>
                             </div>
-                            
-                            <div className="button-group" style={{ marginTop: '16px' }}>
-                                <button 
-                                    className={`button ${compressionEnabled ? 'button-success' : 'button-secondary'}`}
-                                    onClick={() => setCompressionEnabled(!compressionEnabled)}
-                                >
-                                    <Zap className="lucide-icon" />
-                                    Compresión: {compressionEnabled ? 'ON' : 'OFF'}
-                                </button>
-                                <button 
-                                    className={`button ${aiClassification ? 'button-success' : 'button-secondary'}`}
-                                    onClick={() => setAiClassification(!aiClassification)}
-                                >
-                                    <Brain className="lucide-icon" />
-                                    IA Clasificación: {aiClassification ? 'ON' : 'OFF'}
-                                </button>
-                                <button className="button button-secondary">
-                                    <Eye className="lucide-icon" />
-                                    Vista Previa
-                                </button>
-                                <button className="button button-secondary">
-                                    <Download className="lucide-icon" />
-                                    Exportar Config
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="maat-grid">
-                        {/* Panel de Carga */}
-                        <div className="maat-card">
-                            <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: '600' }}>
-                                <Upload className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
-                                Zona de Carga Masiva
-                            </h2>
-                            
-                            {/* Zona de Drop */}
-                            <div className="drop-zone">
-                                <Upload style={{ width: '48px', height: '48px', margin: '0 auto 16px', color: '#9ca3af' }} />
-                                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
-                                    Arrastra archivos aquí
-                                </h3>
-                                <p style={{ color: '#6b7280', marginBottom: '16px' }}>
-                                    Soporta hasta 100MB por archivo • PDF, DOC, XLSX, JPG, MP4, DICOM
-                                </p>
-                                <div className="button-group" style={{ justifyContent: 'center' }}>
-                                    <button className="button button-primary" onClick={handleFileSelect}>
-                                        <Plus className="lucide-icon" />
-                                        Seleccionar Archivos
-                                    </button>
-                                    <button className="button button-secondary">
-                                        <FolderOpen className="lucide-icon" />
-                                        Carpeta Completa
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Progreso Global */}
-                            <div style={{ marginTop: '16px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ fontSize: '14px', fontWeight: '600' }}>Progreso Global</span>
-                                    <span style={{ fontSize: '14px', color: '#6b7280' }}>{Math.round(progress)}%</span>
-                                </div>
-                                <div className="progress-bar">
-                                    <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-                                </div>
-                            </div>
-
-                            {/* Lista de Archivos */}
-                            <div className="file-list">
-                                <h4 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>
-                                    Archivos en Cola ({mockFiles.length})
-                                </h4>
-                                {mockFiles.map((file, index) => (
-                                    <div key={index} className="file-item">
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <FileText className="lucide-icon" />
-                                            <div>
-                                                <div style={{ fontSize: '13px', fontWeight: '500' }}>{file.name}</div>
-                                                <div style={{ fontSize: '11px', color: '#6b7280' }}>{file.size}</div>
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span className={`badge badge-${
-                                                file.status === 'completed' ? 'success' :
-                                                file.status === 'uploading' ? 'info' :
-                                                file.status === 'error' ? 'error' : 'warning'
-                                            }`}>
-                                                {file.status === 'completed' && <CheckCircle className="lucide-icon" />}
-                                                {file.status === 'error' && <AlertCircle className="lucide-icon" />}
-                                                {file.status === 'uploading' && `${file.progress}%`}
-                                                {file.status === 'queued' && 'En cola'}
-                                                {file.status === 'completed' && 'Completado'}
-                                                {file.status === 'error' && 'Error'}
-                                            </span>
-                                            <button className="button" style={{ padding: '4px 8px', fontSize: '12px' }}>
-                                                <X className="lucide-icon" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Panel de Estadísticas y Control */}
-                        <div className="maat-card">
-                            <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: '600' }}>
-                                <BarChart3 className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
-                                Dashboard de Rendimiento
-                            </h2>
-
-                            {/* Estadísticas Principales */}
-                            <div className="stats-grid">
-                                <div className="stat-item">
-                                    <div className="stat-value">{filesProcessed}</div>
-                                    <div className="stat-label">Archivos Procesados</div>
-                                </div>
-                                <div className="stat-item">
-                                    <div className="stat-value">{cacheHitRate}%</div>
-                                    <div className="stat-label">Cache Hit Rate</div>
-                                </div>
-                                <div className="stat-item">
-                                    <div className="stat-value">{threatsBlocked}</div>
-                                    <div className="stat-label">Amenazas Bloqueadas</div>
-                                </div>
-                                <div className="stat-item">
-                                    <div className="stat-value">2.3GB</div>
-                                    <div className="stat-label">Datos Comprimidos</div>
-                                </div>
-                            </div>
-
-                            {/* Controles de Sistema */}
-                            <div style={{ marginTop: '24px' }}>
-                                <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>
-                                    Controles del Sistema
-                                </h3>
-                                <div className="button-group">
-                                    <button className="button button-secondary">
-                                        <Activity className="lucide-icon" />
-                                        Monitor Tiempo Real
-                                    </button>
-                                    <button className="button button-secondary">
-                                        <RefreshCw className="lucide-icon" />
-                                        Limpiar Cache
-                                    </button>
-                                    <button className="button button-secondary">
-                                        <Database className="lucide-icon" />
-                                        Optimizar BD
-                                    </button>
-                                </div>
-                                
-                                <div className="button-group" style={{ marginTop: '12px' }}>
-                                    <button className="button button-secondary">
-                                        <Lock className="lucide-icon" />
-                                        Auditoría Seguridad
-                                    </button>
-                                    <button className="button button-secondary">
-                                        <TrendingUp className="lucide-icon" />
-                                        Reportes
-                                    </button>
-                                    <button className="button button-secondary">
-                                        <Key className="lucide-icon" />
-                                        Gestión Cifrado
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Estados del Sistema */}
-                            <div style={{ marginTop: '24px' }}>
-                                <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>
-                                    Estado del Sistema
-                                </h3>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '14px' }}>Scanner de Virus</span>
-                                        <span className="badge badge-success">Activo</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '14px' }}>Compresión Adaptativa</span>
-                                        <span className="badge badge-success">Activo</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '14px' }}>IA Clasificación</span>
-                                        <span className="badge badge-success">Activo</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '14px' }}>Rate Limiting</span>
-                                        <span className="badge badge-info">Configurado</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '14px' }}>Streaming Zero-Memory</span>
-                                        <span className="badge badge-success">Optimizado</span>
-                                    </div>
+                            <div className="indicator">
+                                <div className="indicator-value">{cacheHitRate}%</div>
+                                <div className="indicator-label">
+                                    <HardDrive className="lucide-icon" style={{ display: 'inline', marginRight: '4px' }} />
+                                    Cache
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Panel de Herramientas Adicionales */}
-                    <div className="maat-card">
-                        <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: '600' }}>
-                            <Settings className="lucide-icon" style={{ display: 'inline', marginRight: '8px' }} />
-                            Herramientas y Utilidades
-                        </h2>
-                        
-                        <div className="button-group">
-                            <button className="button button-secondary">
-                                <Search className="lucide-icon" />
-                                Buscar Documentos
-                            </button>
-                            <button className="button button-secondary">
-                                <Filter className="lucide-icon" />
-                                Filtros Avanzados
-                            </button>
-                            <button className="button button-secondary">
-                                <Users className="lucide-icon" />
-                                Gestión Usuarios
-                            </button>
-                            <button className="button button-secondary">
-                                <Clock className="lucide-icon" />
-                                Historial Actividad
-                            </button>
-                            <button className="button button-secondary">
-                                <Server className="lucide-icon" />
-                                Estado Servidores
-                            </button>
-                            <button className="button button-secondary">
-                                <Maximize2 className="lucide-icon" />
-                                Vista Completa
-                            </button>
-                        </div>
-                    </div>
+                    {/* Navegación de Módulos */}
+                    <ModuleNavigation />
+
+                    {/* Contenido del Módulo Activo */}
+                    {renderActiveModule()}
 
                     {/* Input oculto para selección de archivos */}
                     <input 
@@ -816,7 +1470,7 @@
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<CompleteMAATInterface />);
+        root.render(<CompleteMAATSystem />);
     </script>
 </body>
 </html>
