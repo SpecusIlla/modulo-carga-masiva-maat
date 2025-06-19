@@ -640,13 +640,51 @@ export class UploadManager {
     const largeFiles = sessions.filter(s => s.fileSize > 50 * 1024 * 1024);
     const smallFiles = sessions.filter(s => s.fileSize <= 50 * 1024 * 1024);
     
+    // Métricas avanzadas de rendimiento
+    const now = Date.now();
+    const recentSessions = sessions.filter(s => now - s.startTime < 300000); // 5 minutos
+    
+    const averageSpeed = recentSessions.length > 0 
+      ? recentSessions.reduce((sum, s) => {
+          const duration = Math.max(1, now - s.startTime);
+          return sum + (s.fileSize / 1024 / 1024) / (duration / 1000);
+        }, 0) / recentSessions.length
+      : 0;
+
+    const memoryUsage = this.calculateMemoryUsage();
+    const cacheEfficiency = this.calculateCacheEfficiency();
+    
     return {
+      // Métricas básicas
       activeUploads: sessions.length,
-      cacheStats: this.getCacheStats(),
+      completedUploads,
       averageUploadTime: completedUploads > 0 ? 
         sessions.reduce((sum, s) => sum + (Date.now() - s.startTime), 0) / completedUploads : 0,
+      
+      // Métricas de rendimiento
+      averageSpeed, // MB/s
+      peakSpeed: Math.max(...recentSessions.map(s => {
+        const duration = Math.max(1, now - s.startTime);
+        return (s.fileSize / 1024 / 1024) / (duration / 1000);
+      }), 0),
+      
+      // Métricas de memoria
+      memoryUsage: {
+        current: memoryUsage.current,
+        peak: memoryUsage.peak,
+        efficiency: memoryUsage.efficiency
+      },
+      
+      // Métricas de caché
+      cacheStats: this.getCacheStats(),
+      cacheEfficiency,
       totalBandwidthSaved: this.calculateBandwidthSaved(),
       compressionRatio: this.calculateCompressionRatio(),
+      
+      // Métricas de calidad
+      errorRate: this.calculateErrorRate(),
+      successRate: this.calculateSuccessRate(),
+      retryRate: this.calculateRetryRate(),
 
 
   // Calcular uso del directorio temporal
@@ -704,6 +742,100 @@ export class UploadManager {
     // This would need to track original vs compressed sizes
     // For now, return estimated compression ratio
     return 0.3; // 30% compression on average
+  }
+
+  private calculateMemoryUsage(): {
+    current: number;
+    peak: number;
+    efficiency: number;
+  } {
+    const activeSessions = Array.from(this.uploadSessions.values());
+    const currentUsage = activeSessions.reduce((sum, session) => {
+      return sum + (session.chunks?.length || 0) * this.CHUNK_SIZE;
+    }, 0);
+
+    return {
+      current: currentUsage / 1024 / 1024, // MB
+      peak: this.peakMemoryUsage / 1024 / 1024, // MB
+      efficiency: currentUsage > 0 ? (activeSessions.length / currentUsage) * 1000000 : 1
+    };
+  }
+
+  private peakMemoryUsage = 0;
+
+  private calculateCacheEfficiency(): number {
+    const cacheStats = this.getCacheStats();
+    const totalRequests = cacheStats.hits + cacheStats.misses;
+    return totalRequests > 0 ? (cacheStats.hits / totalRequests) * 100 : 0;
+  }
+
+  private calculateErrorRate(): number {
+    const sessions = Array.from(this.uploadSessions.values());
+    const errors = sessions.filter(s => s.status === 'error').length;
+    return sessions.length > 0 ? (errors / sessions.length) * 100 : 0;
+  }
+
+  private calculateSuccessRate(): number {
+    const sessions = Array.from(this.uploadSessions.values());
+    const successful = sessions.filter(s => s.status === 'completed').length;
+    return sessions.length > 0 ? (successful / sessions.length) * 100 : 0;
+  }
+
+  private calculateRetryRate(): number {
+    const sessions = Array.from(this.uploadSessions.values());
+    const retries = sessions.reduce((sum, s) => sum + (s.retryCount || 0), 0);
+    return sessions.length > 0 ? (retries / sessions.length) * 100 : 0;
+  }
+
+  // Optimización automática basada en métricas
+  optimizePerformance(): {
+    optimizations: string[];
+    metrics: any;
+  } {
+    const optimizations: string[] = [];
+    const metrics = this.getPerformanceMetrics();
+
+    // Optimizar caché si hit rate es bajo
+    if (metrics.cacheEfficiency < 70) {
+      this.optimizeCache();
+      optimizations.push('Cache optimization applied');
+    }
+
+    // Ajustar chunk size basado en velocidad promedio
+    if (metrics.averageSpeed < 1) { // < 1 MB/s
+      this.CHUNK_SIZE = Math.max(512 * 1024, this.CHUNK_SIZE * 0.8); // Reducir chunk size
+      optimizations.push(`Reduced chunk size to ${this.CHUNK_SIZE / 1024}KB`);
+    } else if (metrics.averageSpeed > 10) { // > 10 MB/s
+      this.CHUNK_SIZE = Math.min(2 * 1024 * 1024, this.CHUNK_SIZE * 1.2); // Aumentar chunk size
+      optimizations.push(`Increased chunk size to ${this.CHUNK_SIZE / 1024}KB`);
+    }
+
+    // Limpiar sesiones obsoletas si hay muchas activas
+    if (metrics.activeUploads > 50) {
+      this.cleanupOldSessions();
+      optimizations.push('Cleaned up old sessions');
+    }
+
+    return { optimizations, metrics };
+  }
+
+  private optimizeCache(): void {
+    // Limpiar entradas de caché poco utilizadas
+    const cutoff = Date.now() - 10 * 60 * 1000; // 10 minutos
+    for (const [hash, entry] of this.uploadCache.entries()) {
+      if (entry.lastAccess < cutoff && entry.accessCount < 2) {
+        this.uploadCache.delete(hash);
+      }
+    }
+  }
+
+  private cleanupOldSessions(): void {
+    const cutoff = Date.now() - 30 * 60 * 1000; // 30 minutos
+    for (const [sessionId, session] of this.uploadSessions.entries()) {
+      if (session.startTime < cutoff && session.status !== 'uploading') {
+        this.uploadSessions.delete(sessionId);
+      }
+    }
   }
 }
 
