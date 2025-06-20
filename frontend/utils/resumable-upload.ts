@@ -47,7 +47,7 @@ export class ResumableUploadManager {
   
   private readonly DEFAULT_CHUNK_SIZE = 1024 * 1024; // 1MB
   private readonly LARGE_FILE_THRESHOLD = 25 * 1024 * 1024; // 25MB
-  private readonly MAX_CONCURRENT_CHUNKS = 3;
+  private readonly MAX_CONCURRENT_CHUNKS = 8; // Aumentado de 3 a 8
   private readonly STORAGE_KEY = 'maat_resumable_sessions';
 
   constructor() {

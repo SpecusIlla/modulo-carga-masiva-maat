@@ -50,9 +50,9 @@ export class UploadManager {
   private uploadSessions: Map<string, UploadSession> = new Map();
   private uploadCache: Map<string, CacheEntry> = new Map();
   private readonly CHUNK_SIZE = 1024 * 1024; // 1MB chunks
-  private readonly MAX_PARALLEL_UPLOADS = 5;
-  private readonly CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
-  private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  private readonly MAX_PARALLEL_UPLOADS = 20; // Aumentado de 5 a 20
+  private readonly CACHE_TTL = 48 * 60 * 60 * 1000; // 48 hours (aumentado)
+  private readonly SESSION_TIMEOUT = 60 * 60 * 1000; // 60 minutes (aumentado)
   private readonly TEMP_DIR = 'temp/uploads';
   private readonly CACHE_DIR = 'temp/cache';
 

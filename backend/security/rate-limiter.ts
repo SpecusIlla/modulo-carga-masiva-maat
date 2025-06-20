@@ -30,8 +30,8 @@ export class RateLimiter {
     // Configuraciones por defecto para diferentes tipos de operaciones
     this.configs.set('upload', {
       windowMs: 15 * 60 * 1000, // 15 minutos
-      maxRequests: 50,
-      maxUploadSize: 500 * 1024 * 1024, // 500MB por ventana
+      maxRequests: 200, // Aumentado de 50 a 200
+      maxUploadSize: 2 * 1024 * 1024 * 1024, // 2GB por ventana (aumentado)
       skipSuccessfulRequests: false,
       skipFailedRequests: true,
       keyGenerator: (req: Request) => `upload_${this.getClientIP(req)}_${req.user?.id || 'anonymous'}`

@@ -36,9 +36,9 @@ import type { BulkUploadZoneProps, FileUploadItem, LinkUploadItem, UploadStatist
 
 // Configuración por defecto
 const defaultConfig: UploadConfiguration = {
-  maxFileSize: 100 * 1024 * 1024, // 100MB
+  maxFileSize: 250 * 1024 * 1024, // 250MB (aumentado)
   allowedFileTypes: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'mp4', 'avi'],
-  concurrentUploads: 10,
+  concurrentUploads: 25, // Aumentado de 10 a 25
   enableAI: true,
   enableDuplicateDetection: true,
   apiEndpoints: {
