@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAAT v1.0.1 - Módulo de Carga Masiva</title>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         * {
             margin: 0;
@@ -186,12 +187,24 @@
             gap: 8px;
             padding: 8px 0;
             font-size: 14px;
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
         }
 
         .feature-list li::before {
-            content: "✓";
-            color: #10b981;
-            font-weight: bold;
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E") no-repeat center;
         }
 
         .alert {
@@ -283,7 +296,8 @@
             <h1>Sistema MAAT v1.0.1</h1>
             <p>Módulo de Carga Masiva con IA, Streaming Zero-Memory y Seguridad Multicapa</p>
             <div class="status-badge">
-                ✓ Sistema Operativo - Calificación: 95.1/100
+                <i data-lucide="check-circle"></i>
+                Sistema Operativo - Calificación: 95.1/100
             </div>
         </div>
 
@@ -358,7 +372,9 @@
             </div>
 
             <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-                <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
+                <div style="margin-bottom: 16px;">
+                    <i data-lucide="folder-open" style="width: 48px; height: 48px; color: #6366f1;"></i>
+                </div>
                 <h4 style="margin-bottom: 8px;">Arrastra archivos aquí o haz clic para seleccionar</h4>
                 <p style="color: #6b7280;">Soporta: PDF, DOC, XLS, JPG, PNG, MP4, DICOM y más</p>
                 <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
@@ -638,6 +654,9 @@
             console.log('Abriendo monitor de rendimiento...');
             alert('Monitor de Rendimiento: Métricas en tiempo real - 12.7 MB/s sostenida');
         }
+
+        // Inicializar iconos Lucide
+        lucide.createIcons();
 
         // Actualizar métricas cada 3 segundos para simular actividad
         setInterval(() => {
