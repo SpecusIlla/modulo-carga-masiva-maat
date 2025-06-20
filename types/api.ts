@@ -105,7 +105,43 @@ export interface ClassificationEndpointResponse {
     readonly hasText: boolean;
     readonly hasImages: boolean;
     readonly hasCode: boolean;
+  }
+}
+
+export interface VersionControlEndpointResponse {
+  readonly versionId: string;
+  readonly fileId: string;
+  readonly versionNumber: number;
+  readonly hash: string;
+  readonly size: number;
+  readonly createdAt: string;
+  readonly createdBy: string;
+  readonly comment: string;
+  readonly parentVersion?: string;
+  readonly tags: readonly string[];
+}
+
+export interface VersionHistoryEndpointResponse {
+  readonly success: boolean;
+  readonly fileId: string;
+  readonly totalVersions: number;
+  readonly versions: readonly VersionControlEndpointResponse[];
+}
+
+export interface VersionComparisonEndpointResponse {
+  readonly success: boolean;
+  readonly comparison: {
+    readonly fromVersion: string;
+    readonly toVersion: string;
+    readonly changes: {
+      readonly added: number;
+      readonly modified: number;
+      readonly deleted: number;
+      readonly sizeChange: number;
+    };
+    readonly similarity: number;
   };
+};
 }
 
 export interface CategoriesEndpointResponse {

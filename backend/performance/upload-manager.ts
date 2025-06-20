@@ -8,6 +8,7 @@ import { gzip, gunzip } from 'zlib';
 import { virusScanner } from '../security/virus-scanner';
 import { encryption } from '../security/encryption';
 import { auditLogger } from '../security/audit-logger';
+import { versionControl } from '../version-control';
 
 const gzipAsync = promisify(gzip);
 const gunzipAsync = promisify(gunzip);
@@ -54,7 +55,7 @@ export class UploadManager {
   private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   private readonly TEMP_DIR = 'temp/uploads';
   private readonly CACHE_DIR = 'temp/cache';
-  
+
   constructor() {
     this.ensureDirectories();
     this.startCleanupScheduler();
@@ -125,7 +126,7 @@ export class UploadManager {
   async initializeUpload(req: Request, res: Response): Promise<void> {
     try {
       const { fileName, fileSize, totalChunks, metadata } = req.body;
-      
+
       if (!fileName || !fileSize || !totalChunks) {
         res.status(400).json({ error: 'Missing required parameters' });
         return;
@@ -139,7 +140,7 @@ export class UploadManager {
 
       // Generate upload ID
       const uploadId = this.generateUploadId();
-      
+
       // Calculate file hash for caching
       const fileHash = createHash('sha256')
         .update(`${fileName}-${fileSize}-${Date.now()}`)
@@ -151,7 +152,7 @@ export class UploadManager {
         console.log(`[UPLOAD-MANAGER] Cache hit for file: ${fileName}`);
         cachedEntry.accessCount++;
         cachedEntry.lastAccess = Date.now();
-        
+
         res.json({
           uploadId,
           cached: true,
@@ -266,14 +267,14 @@ export class UploadManager {
         // Archivos pequeños en memoria (más rápido)
         session.chunks.set(chunkNumber, processedChunk);
       }
-      
+
       session.chunksReceived.add(chunkNumber);
 
       console.log(`[UPLOAD-MANAGER] Chunk ${chunkNumber}/${totalChunks} received for ${uploadId}`);
 
       // Check if all chunks are received
       if (session.chunksReceived.size === session.totalChunks) {
-        await this.assembleFile(session);
+        await this.assembleFile(session, req);
         res.json({
           message: 'Upload completed',
           uploadId,
@@ -297,18 +298,18 @@ export class UploadManager {
     }
   }
 
-  private async assembleFile(session: UploadSession): Promise<string> {
+  private async assembleFile(session: UploadSession, req: Request): Promise<string> {
     const finalPath = join('uploads', `${session.uploadId}_${session.fileName}`);
-    
+
     try {
       // Para archivos grandes, usar streaming directo desde chunks temporales
       if (session.fileSize > 50 * 1024 * 1024) { // >50MB
-        return await this.assembleFileStream(session, finalPath);
+        return await this.assembleFileStream(session, finalPath, req);
       }
-      
+
       // Create write stream for final file
       const writeStream = createWriteStream(finalPath);
-      
+
       // Write chunks in order
       for (let i = 0; i < session.totalChunks; i++) {
         const chunk = session.chunks.get(i);
@@ -316,73 +317,33 @@ export class UploadManager {
           writeStream.write(chunk);
         }
       }
-      
+
       writeStream.end();
-      
+
       // Wait for write to complete
       await new Promise((resolve, reject) => {
         writeStream.on('finish', resolve);
         writeStream.on('error', reject);
       });
 
+      // Clear chunks from memory immediately after assembly
+      session.chunks.clear();
+
+      // Create version before security scan
+      const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      await versionControl.createVersion(
+        finalPath,
+        fileId,
+        req.user?.id || 'anonymous',
+        `Upload: ${session.fileName}`,
+        ['upload', 'auto-generated']
+      );
+
       // Perform security scan
       const scanResult = await virusScanner.scanFile(finalPath, session.fileName);
       if (!scanResult.isClean) {
         // Move to quarantine
         const quarantinePath = join('quarantine', `${session.uploadId}_${session.fileName}`);
-
-
-  // Método optimizado para archivos grandes - streaming directo
-  private async assembleFileStream(session: UploadSession, finalPath: string): Promise<string> {
-    const writeStream = createWriteStream(finalPath);
-    const hashCalculator = createHash('sha256');
-    
-    try {
-      // Stream chunks en orden sin cargarlos todos en memoria
-      for (let i = 0; i < session.totalChunks; i++) {
-        const chunkPath = join(this.TEMP_DIR, `${session.uploadId}_chunk_${i}`);
-        
-        if (existsSync(chunkPath)) {
-          // Stream chunk desde disco directamente
-          const chunkStream = createReadStream(chunkPath);
-          
-          // Pipeline para hash y escritura simultánea
-          await pipeline(
-            chunkStream,
-            new Transform({
-              transform(chunk, encoding, callback) {
-                hashCalculator.update(chunk);
-                this.push(chunk);
-                callback();
-              }
-            }),
-            writeStream,
-            { end: false } // No cerrar writeStream entre chunks
-          );
-          
-          // Limpiar chunk temporal inmediatamente
-          await fs.unlink(chunkPath).catch(console.error);
-        }
-      }
-      
-      writeStream.end();
-      
-      // Esperar finalización
-      await new Promise((resolve, reject) => {
-        writeStream.on('finish', resolve);
-        writeStream.on('error', reject);
-      });
-      
-      console.log(`[UPLOAD-MANAGER] Large file assembled via streaming: ${finalPath}`);
-      return finalPath;
-      
-    } catch (error) {
-      console.error('[UPLOAD-MANAGER] Streaming assembly failed:', error);
-      writeStream.destroy();
-      throw error;
-    }
-  }
-
         require('fs').renameSync(finalPath, quarantinePath);
         throw new Error(`File contains threats: ${scanResult.threats.join(', ')}`);
       }
@@ -391,7 +352,7 @@ export class UploadManager {
       const fileHash = createHash('sha256')
         .update(require('fs').readFileSync(finalPath))
         .digest('hex');
-      
+
       this.uploadCache.set(fileHash, {
         hash: fileHash,
         filePath: finalPath,
@@ -417,10 +378,10 @@ export class UploadManager {
       });
 
       console.log(`[UPLOAD-MANAGER] File assembled successfully: ${finalPath}`);
-      
+
       // Cleanup session
       this.cleanupSession(session.uploadId);
-      
+
       return finalPath;
 
     } catch (error) {
@@ -431,11 +392,61 @@ export class UploadManager {
     }
   }
 
+  private async assembleFileStream(session: UploadSession, finalPath: string, req: Request): Promise<string> {
+    const writeStream = createWriteStream(finalPath);
+    const hashCalculator = createHash('sha256');
+
+    try {
+      // Stream chunks en orden sin cargarlos todos en memoria
+      for (let i = 0; i < session.totalChunks; i++) {
+        const chunkPath = join(this.TEMP_DIR, `${session.uploadId}_chunk_${i}`);
+
+        if (existsSync(chunkPath)) {
+          // Stream chunk desde disco directamente
+          const chunkStream = createReadStream(chunkPath);
+
+          // Pipeline para hash y escritura simultánea
+          await pipeline(
+            chunkStream,
+            new Transform({
+              transform(chunk, encoding, callback) {
+                hashCalculator.update(chunk);
+                this.push(chunk);
+                callback();
+              }
+            }),
+            writeStream,
+            { end: false } // No cerrar writeStream entre chunks
+          );
+
+          // Limpiar chunk temporal inmediatamente
+          await fs.unlink(chunkPath).catch(console.error);
+        }
+      }
+
+      writeStream.end();
+
+      // Esperar finalización
+      await new Promise((resolve, reject) => {
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+
+      console.log(`[UPLOAD-MANAGER] Large file assembled via streaming: ${finalPath}`);
+      return finalPath;
+
+    } catch (error) {
+      console.error('[UPLOAD-MANAGER] Streaming assembly failed:', error);
+      writeStream.destroy();
+      throw error;
+    }
+  }
+
   async getUploadStatus(req: Request, res: Response): Promise<void> {
     try {
       const { uploadId } = req.params;
       const session = this.uploadSessions.get(uploadId);
-      
+
       if (!session) {
         res.status(404).json({ error: 'Upload session not found' });
         return;
@@ -468,7 +479,7 @@ export class UploadManager {
     try {
       const { uploadId } = req.params;
       const session = this.uploadSessions.get(uploadId);
-      
+
       if (!session) {
         res.status(404).json({ error: 'Upload session not found' });
         return;
@@ -487,7 +498,7 @@ export class UploadManager {
       });
 
       this.cleanupSession(uploadId);
-      
+
       res.json({ message: 'Upload cancelled successfully' });
 
     } catch (error) {
@@ -496,7 +507,6 @@ export class UploadManager {
     }
   }
 
-  // Performance optimization methods
   async compressFile(filePath: string): Promise<string> {
     const compressedPath = `${filePath}.gz`;
     const readStream = createReadStream(filePath);
@@ -556,14 +566,14 @@ export class UploadManager {
   private getOldestCacheEntry(): any {
     let oldest = null;
     let oldestTime = Date.now();
-    
+
     for (const entry of this.uploadCache.values()) {
       if (entry.timestamp < oldestTime) {
         oldest = entry;
         oldestTime = entry.timestamp;
       }
     }
-    
+
     return oldest ? {
       hash: oldest.hash,
       age: Date.now() - oldest.timestamp,
@@ -574,14 +584,14 @@ export class UploadManager {
   private getMostAccessedCacheEntry(): any {
     let mostAccessed = null;
     let maxAccesses = 0;
-    
+
     for (const entry of this.uploadCache.values()) {
-      if (entry.accessCount > maxAccresses) {
+      if (entry.accessCount > maxAccesses) {
         mostAccessed = entry;
         maxAccesses = entry.accessCount;
       }
     }
-    
+
     return mostAccessed ? {
       hash: mostAccessed.hash,
       accessCount: mostAccessed.accessCount,
@@ -593,37 +603,9 @@ export class UploadManager {
     return `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  // Public methods for monitoring
   getActiveUploads(): any[] {
     return Array.from(this.uploadSessions.values()).map(session => ({
       uploadId: session.uploadId,
-
-
-  // Lógica de compresión adaptativa basada en tamaño y tipo
-  private shouldCompressFile(fileName: string, fileSize: number): boolean {
-    const ext = path.extname(fileName).toLowerCase();
-    
-    // No comprimir archivos ya comprimidos o binarios
-    const skipCompression = ['.zip', '.rar', '.7z', '.gz', '.jpg', '.jpeg', '.png', '.mp4', '.avi'];
-    if (skipCompression.includes(ext)) {
-      return false;
-    }
-    
-    // Comprimir archivos de texto grandes
-    const textFiles = ['.txt', '.json', '.csv', '.xml', '.html', '.css', '.js', '.ts'];
-    if (textFiles.includes(ext) && fileSize > 1024 * 1024) { // >1MB
-      return true;
-    }
-    
-    // Comprimir documentos grandes
-    const documentFiles = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
-    if (documentFiles.includes(ext) && fileSize > 5 * 1024 * 1024) { // >5MB
-      return true;
-    }
-    
-    return false;
-  }
-
       fileName: session.fileName,
       progress: (session.chunksReceived.size / session.totalChunks) * 100,
       elapsed: Date.now() - session.startTime,
@@ -632,19 +614,43 @@ export class UploadManager {
     }));
   }
 
+  private shouldCompressFile(fileName: string, fileSize: number): boolean {
+    const ext = path.extname(fileName).toLowerCase();
+
+    // No comprimir archivos ya comprimidos o binarios
+    const skipCompression = ['.zip', '.rar', '.7z', '.gz', '.jpg', '.jpeg', '.png', '.mp4', '.avi'];
+    if (skipCompression.includes(ext)) {
+      return false;
+    }
+
+    // Comprimir archivos de texto grandes
+    const textFiles = ['.txt', '.json', '.csv', '.xml', '.html', '.css', '.js', '.ts'];
+    if (textFiles.includes(ext) && fileSize > 1024 * 1024) { // >1MB
+      return true;
+    }
+
+    // Comprimir documentos grandes
+    const documentFiles = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
+    if (documentFiles.includes(ext) && fileSize > 5 * 1024 * 1024) { // >5MB
+      return true;
+    }
+
+    return false;
+  }
+
   getPerformanceMetrics(): any {
     const sessions = Array.from(this.uploadSessions.values());
     const completedUploads = sessions.length;
-    
+
     // Calcular métricas por tamaño de archivo
     const largeFiles = sessions.filter(s => s.fileSize > 50 * 1024 * 1024);
     const smallFiles = sessions.filter(s => s.fileSize <= 50 * 1024 * 1024);
-    
+
     // Métricas avanzadas de rendimiento
     const now = Date.now();
     const recentSessions = sessions.filter(s => now - s.startTime < 300000); // 5 minutos
-    
-    const averageSpeed = recentSessions.length > 0 
+
+    const averageSpeed = recentSessions.length > 0
       ? recentSessions.reduce((sum, s) => {
           const duration = Math.max(1, now - s.startTime);
           return sum + (s.fileSize / 1024 / 1024) / (duration / 1000);
@@ -653,46 +659,44 @@ export class UploadManager {
 
     const memoryUsage = this.calculateMemoryUsage();
     const cacheEfficiency = this.calculateCacheEfficiency();
-    
+
     return {
       // Métricas básicas
       activeUploads: sessions.length,
       completedUploads,
-      averageUploadTime: completedUploads > 0 ? 
+      averageUploadTime: completedUploads > 0 ?
         sessions.reduce((sum, s) => sum + (Date.now() - s.startTime), 0) / completedUploads : 0,
-      
+
       // Métricas de rendimiento
       averageSpeed, // MB/s
       peakSpeed: Math.max(...recentSessions.map(s => {
         const duration = Math.max(1, now - s.startTime);
         return (s.fileSize / 1024 / 1024) / (duration / 1000);
       }), 0),
-      
+
       // Métricas de memoria
       memoryUsage: {
         current: memoryUsage.current,
         peak: memoryUsage.peak,
         efficiency: memoryUsage.efficiency
       },
-      
+
       // Métricas de caché
       cacheStats: this.getCacheStats(),
       cacheEfficiency,
       totalBandwidthSaved: this.calculateBandwidthSaved(),
       compressionRatio: this.calculateCompressionRatio(),
-      
+
       // Métricas de calidad
       errorRate: this.calculateErrorRate(),
       successRate: this.calculateSuccessRate(),
       retryRate: this.calculateRetryRate(),
 
-
-  // Calcular uso del directorio temporal
   private calculateTempDirUsage(): number {
     try {
       const files = require('fs').readdirSync(this.TEMP_DIR);
       let totalSize = 0;
-      
+
       for (const file of files) {
         try {
           const stats = require('fs').statSync(join(this.TEMP_DIR, file));
@@ -701,7 +705,7 @@ export class UploadManager {
           // Archivo podría haberse eliminado
         }
       }
-      
+
       return totalSize;
     } catch (error) {
       return 0;
@@ -710,7 +714,7 @@ export class UploadManager {
 
       largeFileMetrics: {
         count: largeFiles.length,
-        averageSize: largeFiles.length > 0 ? 
+        averageSize: largeFiles.length > 0 ?
           largeFiles.reduce((sum, s) => sum + s.fileSize, 0) / largeFiles.length : 0,
         streamingActive: largeFiles.filter(s => s.chunksReceived.size < s.totalChunks).length
       },
@@ -787,7 +791,6 @@ export class UploadManager {
     return sessions.length > 0 ? (retries / sessions.length) * 100 : 0;
   }
 
-  // Optimización automática basada en métricas
   optimizePerformance(): {
     optimizations: string[];
     metrics: any;
