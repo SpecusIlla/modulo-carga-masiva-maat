@@ -1,7 +1,7 @@
 {
   "name": "@maat/bulk-upload-module",
-  "version": "1.0.1",
-  "description": "Módulo de carga masiva autocontenido con IA integrada - Sistema MAAT v1.0.1",
+  "version": "1.2.0",
+  "description": "Módulo de carga masiva autocontenido con IA integrada - Sistema MAAT v1.2.0",
   "main": "index.js",
   "type": "module",
   "exports": {
@@ -34,6 +34,6 @@
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
-  "author": "Sistema MAAT v1.0.1",
+  "author": "Sistema MAAT v1.2.0",
   "license": "MIT"
 }
