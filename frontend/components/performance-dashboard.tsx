@@ -40,11 +40,19 @@ export function PerformanceDashboard() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const intervalRef = useRef<number>();
 
+  const [healthStatus, setHealthStatus] = useState<any>({});
+  const [scalingDecisions, setScalingDecisions] = useState<any[]>([]);
+  const [predictiveAlerts, setPredictiveAlerts] = useState<any[]>([]);
+
   useEffect(() => {
     loadMetrics();
+    loadHealthStatus();
     
     if (autoRefresh) {
-      intervalRef.current = window.setInterval(loadMetrics, 2000);
+      intervalRef.current = window.setInterval(() => {
+        loadMetrics();
+        loadHealthStatus();
+      }, 2000);
     }
 
     return () => {
@@ -53,6 +61,24 @@ export function PerformanceDashboard() {
       }
     };
   }, [autoRefresh]);
+
+  const loadHealthStatus = async () => {
+    try {
+      const response = await fetch('/api/health/status');
+      const data = await response.json();
+      setHealthStatus(data);
+      
+      if (data.predictiveAlerts) {
+        setPredictiveAlerts(data.predictiveAlerts);
+      }
+      
+      if (data.scalingDecisions) {
+        setScalingDecisions(data.scalingDecisions.slice(0, 5));
+      }
+    } catch (error) {
+      console.error('Error loading health status:', error);
+    }
+  };
 
   const loadMetrics = async () => {
     try {
@@ -223,7 +249,103 @@ export function PerformanceDashboard() {
         ))}
       </div>
 
-      {/* Alerts */}
+      {/* Health Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className={`w-5 h-5 ${
+                healthStatus.status === 'healthy' ? 'text-green-500' :
+                healthStatus.status === 'warning' ? 'text-orange-500' : 'text-red-500'
+              }`} />
+              Estado del Sistema
+              <Badge variant={
+                healthStatus.status === 'healthy' ? 'default' :
+                healthStatus.status === 'warning' ? 'secondary' : 'destructive'
+              }>
+                {healthStatus.status || 'Unknown'}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {healthStatus.recommendations && healthStatus.recommendations.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Recomendaciones:</h4>
+                {healthStatus.recommendations.map((rec: string, index: number) => (
+                  <div key={index} className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
+                    {rec}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Predictive Alerts */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-blue-500" />
+              Alertas Predictivas ({predictiveAlerts.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {predictiveAlerts.length > 0 ? (
+              <div className="space-y-3">
+                {predictiveAlerts.slice(0, 3).map((alert: any, index: number) => (
+                  <div key={index} className="p-3 border border-blue-200 rounded-lg bg-blue-50">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-medium text-sm">{alert.metric}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {Math.round(alert.confidence * 100)}% confianza
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-gray-600 mb-1">
+                      Actual: {alert.currentValue.toFixed(1)} → Proyectado: {alert.predictedValue.toFixed(1)}
+                    </div>
+                    <div className="text-xs text-orange-600">
+                      En {Math.round(alert.timeToThreshold)} min: {alert.recommendation}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">No hay alertas predictivas</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Scaling Decisions */}
+      {scalingDecisions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Gauge className="w-5 h-5 text-purple-500" />
+              Decisiones de Escalamiento Recientes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {scalingDecisions.map((decision: any, index: number) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Badge variant={decision.action === 'scale_up' ? 'default' : 'secondary'}>
+                      {decision.action}
+                    </Badge>
+                    <span className="text-sm">{decision.reason}</span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {decision.currentInstances} → {decision.targetInstances} instancias
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Regular Alerts */}
       {alerts.length > 0 && (
         <Card>
           <CardHeader>
