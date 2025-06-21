@@ -331,6 +331,10 @@ class PerformanceTestRunner {
       finalMemory: finalMemory.heapUsed,
       increase: totalIncrease,
       status: totalIncrease < 10 ? 'passed' : totalIncrease < 50 ? 'warning' : 'failed'
+    });nitialMemory: initialMemory.heapUsed,
+      finalMemory: finalMemory.heapUsed,
+      increase: totalIncrease,
+      status: totalIncrease < 10 ? 'passed' : totalIncrease < 50 ? 'warning' : 'failed'
     });
 
     return memoryTests;
@@ -392,16 +396,26 @@ class PerformanceTestRunner {
   generateRecommendations(benchmarks, stressResults, memoryTests) {
     const recommendations = [];
 
-    // Analizar benchmarks
+    // Analyze benchmarks
     const slowBenchmarks = benchmarks.filter(b => b.time > 1000);
     if (slowBenchmarks.length > 0) {
-      recommendations.push('⚡ Optimizar operaciones lentas: ' + slowBenchmarks.map(b => b.test).join(', '));
+      recommendations.push('⚡ Optimize slow operations: ' + slowBenchmarks.map(b => b.test).join(', '));
     }
 
-    // Analizar stress tests
+    // Analyze stress tests
     const failedStress = stressResults.filter(s => s.status === 'failed');
     if (failedStress.length > 0) {
-      recommendations.push('🔥 Mejorar resistencia bajo estrés en: ' + failedStress.map(s => s.scenario).join(', '));
+      recommendations.push('🔧 Fix failed stress tests: ' + failedStress.map(s => s.test).join(', '));
+    }
+
+    // Analyze memory tests
+    const memoryIssues = memoryTests.filter(m => m.status === 'failed');
+    if (memoryIssues.length > 0) {
+      recommendations.push('💾 Address memory issues: ' + memoryIssues.map(m => m.test).join(', '));
+    }
+
+    return recommendations.length > 0 ? recommendations : ['✨ System performance is optimal'];
+  }mendations.push('🔥 Mejorar resistencia bajo estrés en: ' + failedStress.map(s => s.scenario).join(', '));
     }
 
     // Analizar memoria
@@ -451,7 +465,7 @@ class PerformanceTestRunner {
         .status-passed { background: #38a169; }
         .status-warning { background: #d69e2e; }
         .status-failed { background: #e53e3e; }
-        .recommendations { background: #edf2f7; border-radius: 12px; padding: 25px; margin-top: 30px; }
+        .recommendations { background: #edf2f7; padding: 20px; border-radius: 8px; margin-top: 30px; } border-radius: 12px; padding: 25px; margin-top: 30px; }
         .recommendations h3 { color: #2d3748; margin-bottom: 15px; }
         .recommendations ul { list-style: none; }
         .recommendations li { margin: 10px 0; padding-left: 20px; position: relative; }

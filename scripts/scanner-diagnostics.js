@@ -274,6 +274,11 @@ class ScannerDiagnostics {
     console.log(`\n🎯 ESTADO GENERAL: ${this.results.overall.toUpperCase()}`);
     console.log('\n✨ Diagnóstico completado');
   }
+
+  calculateOverallScore() {
+    const scores = Object.values(this.results).map(r => r.status === 'good' ? 100 : r.status === 'warning' ? 70 : 0);
+    return scores.reduce((a, b) => a + b, 0) / scores.length;
+  }
 }
 
 // Ejecutar diagnóstico

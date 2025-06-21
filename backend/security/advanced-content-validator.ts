@@ -315,4 +315,4 @@ export class AdvancedContentValidator {
   }
 }
 
-export const advancedValidator = new AdvancedContentValidator();
+export const advancedValidator = new AdvancedContentValidator();entValidator();

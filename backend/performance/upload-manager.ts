@@ -832,14 +832,14 @@ export class UploadManager {
       optimizations.push('Cache optimization applied');
     }
 
-    // Ajustar chunk size basado en velocidad promedio
-    // if (metrics.averageSpeed < 1) { // < 1 MB/s
-    //   this.CHUNK_SIZE = Math.max(512 * 1024, this.CHUNK_SIZE * 0.8); // Reducir chunk size
-    //   optimizations.push(`Reduced chunk size to ${this.CHUNK_SIZE / 1024}KB`);
-    // } else if (metrics.averageSpeed > 10) { // > 10 MB/s
-    //   this.CHUNK_SIZE = Math.min(2 * 1024 * 1024, this.CHUNK_SIZE * 1.2); // Aumentar chunk size
-    //   optimizations.push(`Increased chunk size to ${this.CHUNK_SIZE / 1024}KB`);
-    // }
+    // Dynamic chunk size adjustment based on average speed
+    if (metrics.averageSpeed < 1) {
+      this.CHUNK_SIZE = Math.max(512 * 1024, this.CHUNK_SIZE * 0.8);
+      optimizations.push(`Reduced chunk size to ${this.CHUNK_SIZE / 1024}KB`);
+    } else if (metrics.averageSpeed > 10) {
+      this.CHUNK_SIZE = Math.min(2 * 1024 * 1024, this.CHUNK_SIZE * 1.2);
+      optimizations.push(`Increased chunk size to ${this.CHUNK_SIZE / 1024}KB`);
+    }
 
     // Limpiar sesiones obsoletas si hay muchas activas
     if (metrics.activeUploads > 50) {
@@ -851,11 +851,13 @@ export class UploadManager {
   }
 
   private optimizeCache(): void {
-    // Limpiar entradas de caché poco utilizadas
-    const cutoff = Date.now() - 10 * 60 * 1000; // 10 minutos
+    // Clean up underused cache entries
+    const cutoff = Date.now() - 10 * 60 * 1000; // 10 minutes
     for (const [hash, entry] of this.uploadCache.entries()) {
       if (entry.lastAccess < cutoff && entry.accessCount < 2) {
         this.uploadCache.delete(hash);
+      }
+    }h);
       }
     }
   }
