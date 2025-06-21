@@ -1,4 +1,4 @@
-// Punto de entrada principal del módulo de carga masiva autocontenido - MAAT v1.3.1
+// Sistema MAAT v1.4.0 - Módulo de Carga Masiva Empresarial
 export { BulkUploadZone } from './components';
 export type { 
   BulkUploadZoneProps, 
