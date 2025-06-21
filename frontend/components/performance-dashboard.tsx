@@ -1,6 +1,6 @@
 
 // Dashboard de métricas de rendimiento en tiempo real
-// Módulo de Carga v1.1.0 - Monitoreo avanzado
+// Sistema MAAT v1.3.1 - Monitoreo avanzado
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

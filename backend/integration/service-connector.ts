@@ -1,5 +1,5 @@
 
-// Sistema de Conexión de Servicios - MAAT v1.3.0+
+// Sistema de Conexión de Servicios - MAAT v1.3.1
 // Coordina la comunicación entre todos los módulos
 
 import { uploadManager } from '../performance/upload-manager';
@@ -31,7 +31,7 @@ export class ServiceConnector {
       service: 'upload-manager',
       status: 'connected',
       lastCheck: new Date(),
-      version: '1.3.0',
+      version: '1.3.1',
       dependencies: ['file-service', 'virus-scanner', 'audit-logger']
     });
 
@@ -39,7 +39,7 @@ export class ServiceConnector {
       service: 'file-service',
       status: 'connected',
       lastCheck: new Date(),
-      version: '1.3.0',
+      version: '1.3.1',
       dependencies: ['database', 'virus-scanner', 'version-control']
     });
 
@@ -55,7 +55,7 @@ export class ServiceConnector {
       service: 'version-control',
       status: 'connected',
       lastCheck: new Date(),
-      version: '1.2.0',
+      version: '1.3.1',
       dependencies: ['file-system']
     });
 
