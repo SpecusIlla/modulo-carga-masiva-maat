@@ -1,7 +1,7 @@
 {
   "name": "@maat/bulk-upload-module",
   "version": "1.4.0",
-  "description": "Módulo de carga masiva autocontenido con IA integrada - Sistema MAAT v1.3.1",
+  "description": "Módulo de carga masiva autocontenido con IA integrada - Sistema MAAT v1.4.0",
   "main": "index.js",
   "type": "module",
   "exports": {
