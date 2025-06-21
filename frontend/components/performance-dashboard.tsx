@@ -1,4 +1,3 @@
-
 // Dashboard de métricas de rendimiento en tiempo real
 // Sistema MAAT v1.3.1 - Monitoreo avanzado
 
@@ -47,7 +46,7 @@ export function PerformanceDashboard() {
   useEffect(() => {
     loadMetrics();
     loadHealthStatus();
-    
+
     if (autoRefresh) {
       intervalRef.current = window.setInterval(() => {
         loadMetrics();
@@ -67,11 +66,11 @@ export function PerformanceDashboard() {
       const response = await fetch('/api/health/status');
       const data = await response.json();
       setHealthStatus(data);
-      
+
       if (data.predictiveAlerts) {
         setPredictiveAlerts(data.predictiveAlerts);
       }
-      
+
       if (data.scalingDecisions) {
         setScalingDecisions(data.scalingDecisions.slice(0, 5));
       }
@@ -84,7 +83,7 @@ export function PerformanceDashboard() {
     try {
       const summary = performanceMonitor.getSummary();
       const cacheMetrics = intelligentCache.getMetrics();
-      
+
       setMetrics({
         ...summary.categories,
         cache: {
@@ -93,7 +92,7 @@ export function PerformanceDashboard() {
           entries: { latest: cacheMetrics.entries, unit: 'items' }
         }
       });
-      
+
       setAlerts(summary.alerts);
     } catch (error) {
       console.error('Error loading performance metrics:', error);
@@ -188,7 +187,7 @@ export function PerformanceDashboard() {
             {isMonitoring ? 'Activo' : 'Pausado'}
           </Badge>
         </div>
-        
+
         <div className="flex flex-wrap gap-1 sm:gap-2">
           <Button
             variant="outline"
@@ -199,7 +198,7 @@ export function PerformanceDashboard() {
             <RefreshCw className={`w-4 h-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
             Auto Refresh
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -207,7 +206,7 @@ export function PerformanceDashboard() {
           >
             {isMonitoring ? 'Pausar' : 'Reanudar'}
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -216,7 +215,7 @@ export function PerformanceDashboard() {
             <Download className="w-4 h-4 mr-2" />
             Exportar
           </Button>
-          
+
           <Button
             variant="destructive"
             size="sm"
@@ -400,7 +399,7 @@ export function PerformanceDashboard() {
                   </div>
                   <Progress value={92} className="h-2" />
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Optimización</span>
@@ -408,7 +407,7 @@ export function PerformanceDashboard() {
                   </div>
                   <Progress value={87} className="h-2" />
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Estabilidad</span>
@@ -521,7 +520,7 @@ export function PerformanceDashboard() {
                     className="h-3"
                   />
                 </div>
-                
+
                 <div className="text-sm text-gray-600">
                   Presión de memoria: {(metrics.memory?.memoryPressure?.latest * 100 || 0).toFixed(1)}%
                 </div>

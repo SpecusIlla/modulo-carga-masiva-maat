@@ -25,7 +25,7 @@ export default function DocumentViewer({ document: doc, onClose }: DocumentViewe
     // Prevent body scroll when modal is open
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    
+
     return () => {
       document.body.style.overflow = originalOverflow;
     };
@@ -53,7 +53,7 @@ export default function DocumentViewer({ document: doc, onClose }: DocumentViewe
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
-      
+
       if (response.ok) {
         const { viewUrl } = await response.json();
         window.open(viewUrl, '_blank');
@@ -140,7 +140,7 @@ export default function DocumentViewer({ document: doc, onClose }: DocumentViewe
             </Button>
           </div>
         </div>
-        
+
         {/* Content */}
         <div className="flex-1 p-4 bg-gray-100 relative">
           <div className="h-full bg-white rounded border shadow-inner">

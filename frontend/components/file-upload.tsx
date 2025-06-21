@@ -29,12 +29,12 @@ export default function FileUpload({ projectId, categoryId, onSuccess, onCancel,
         method: "POST",
         body: formData,
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Error al subir el archivo");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -69,7 +69,7 @@ export default function FileUpload({ projectId, categoryId, onSuccess, onCancel,
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setSelectedFile(e.dataTransfer.files[0]);
       if (!title) {
@@ -89,7 +89,7 @@ export default function FileUpload({ projectId, categoryId, onSuccess, onCancel,
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedFile || !title.trim()) {
       toast({
         title: "Error",

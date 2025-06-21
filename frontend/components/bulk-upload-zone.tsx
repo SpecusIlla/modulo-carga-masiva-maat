@@ -27,6 +27,7 @@ import {
   Clock,
   Zap
 } from "lucide-react";
+import { useEffect } from "react";
 
 interface BulkUploadZoneProps {
   projectId: number;
@@ -92,7 +93,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
       formData.append('file', file);
       formData.append('projectId', projectId.toString());
       formData.append('categoryId', categoryId.toString());
-      
+
       return await apiRequest("POST", "/api/documents/upload", formData);
     },
     onSuccess: () => {
@@ -115,7 +116,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
     for (let i = 0; i < newFiles.length; i++) {
       const hash = await calculateFileHash(newFiles[i].file);
       newFiles[i].hash = hash;
-      
+
       // Check against existing files
       const isDuplicate = files.some(existingFile => existingFile.hash === hash);
       if (isDuplicate) {
@@ -137,21 +138,21 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
       setGlobalProgress(0);
       return;
     }
-    
+
     const completedFiles = files.filter(f => f.status === 'success').length + 
                           links.filter(l => l.status === 'success').length;
     const uploadingFiles = files.filter(f => f.status === 'uploading').length + 
                           links.filter(l => l.status === 'uploading').length;
-    
+
     let progress = (completedFiles / totalFiles) * 100;
-    
+
     // Add partial progress for uploading files
     files.forEach(f => {
       if (f.status === 'uploading') {
         progress += (f.progress / totalFiles);
       }
     });
-    
+
     setGlobalProgress(Math.min(progress, 100));
   };
 
@@ -159,16 +160,16 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
   const getFilteredFiles = () => {
     return files.filter(file => {
       if (filterType === 'all') return true;
-      
+
       const ext = file.file.name.split('.').pop()?.toLowerCase();
       const videoFormats = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v', '3gp', 'mpg', 'mpeg'];
       const imageFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'tiff', 'tif', 'ico', 'heic', 'heif'];
       const docFormats = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
-      
+
       if (filterType === 'videos' && videoFormats.includes(ext || '')) return true;
       if (filterType === 'images' && imageFormats.includes(ext || '')) return true;
       if (filterType === 'documents' && docFormats.includes(ext || '')) return true;
-      
+
       return false;
     });
   };
@@ -212,6 +213,17 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
     }
   };
 
+  useEffect(() => {
+    console.log('[BULK_UPLOAD] Component mounted - MAAT v1.3.1');
+    console.log('%c🚀 MAAT v1.3.1 %c- Sistema de Carga Masiva Empresarial', 
+      'background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
+      'color: #666; font-weight: normal;'
+    );
+    return () => {
+      console.log('[BULK_UPLOAD] Component unmounted - MAAT v1.3.1');
+    };
+  }, []);
+
   const processFiles = useCallback(async (fileList: FileList) => {
     const validFiles = Array.from(fileList).filter(file => {
       const maxSize = 100 * 1024 * 1024; // 100MB
@@ -231,11 +243,11 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
     try {
       // Classify documents using AI
       const classifications = await classifyDocuments(validFiles);
-      
+
       const newFiles = validFiles.map((file, index) => {
         const classification = classifications[index];
         const bestMatch = classification?.bestMatch;
-        
+
         return {
           file,
           categoryId: bestMatch?.categoryId || defaultCategoryId,
@@ -251,10 +263,10 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
           } : undefined
         };
       });
-      
+
       const processedFiles = await checkDuplicates(newFiles);
       setFiles(prev => [...prev, ...processedFiles]);
-      
+
       if (classifications.some((c: any) => c.bestMatch?.confidence > 70)) {
         toast({
           title: "Clasificación automática aplicada",
@@ -296,7 +308,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
 
   const addLink = () => {
     if (!linkInput.trim()) return;
-    
+
     const newLink: LinkUploadItem = {
       url: linkInput,
       title: linkInput.split('/').pop() || linkInput,
@@ -304,7 +316,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
       status: 'pending',
       progress: 0
     };
-    
+
     setLinks(prev => [...prev, newLink]);
     setLinkInput("");
   };
@@ -314,7 +326,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
       .split('\n')
       .map(url => url.trim())
       .filter(url => url && url.startsWith('http'));
-    
+
     const newLinks = urls.map(url => ({
       url,
       title: url.split('/').pop() || url,
@@ -322,11 +334,11 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
       status: 'pending' as const,
       progress: 0
     }));
-    
+
     setLinks(prev => [...prev, ...newLinks]);
     setBulkLinksInput("");
     setShowLinkForm(false);
-    
+
     toast({
       title: "Enlaces agregados",
       description: `Se agregaron ${newLinks.length} enlaces a la cola`
@@ -397,7 +409,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
 
     // Upload files with parallel processing (max 3 concurrent)
     const maxConcurrent = 3;
-    
+
     const uploadFile = async (fileItem: FileUploadItem, index: number) => {
       if (uploadPaused) {
         await new Promise(resolve => {
@@ -410,7 +422,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
       }
 
       const startTime = Date.now();
-      
+
       setFiles(prev => prev.map((f, idx) => 
         f.file === fileItem.file ? { 
           ...f, 
@@ -428,7 +440,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
               const newProgress = Math.min(f.progress + Math.random() * 20, 95);
               const elapsed = (Date.now() - startTime) / 1000;
               const speed = (f.file.size * newProgress / 100) / elapsed;
-              
+
               return { 
                 ...f, 
                 progress: newProgress,
@@ -447,7 +459,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
         });
 
         clearInterval(progressInterval);
-        
+
         setFiles(prev => prev.map((f, idx) => 
           f.file === fileItem.file ? { ...f, status: 'success', progress: 100 } : f
         ));
@@ -460,7 +472,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
           } : f
         ));
       }
-      
+
       updateGlobalProgress();
     };
 
@@ -468,7 +480,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
     const promises = sortedFiles
       .filter(f => f.status === 'pending' && !f.isDuplicate)
       .map((fileItem, index) => uploadFile(fileItem, index));
-    
+
     await Promise.allSettled(promises);
 
     // Upload links
@@ -507,7 +519,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
     }
 
     updateGlobalProgress();
-    
+
     toast({
       title: "Carga completada",
       description: `Se procesaron ${files.length + links.length} elementos`
@@ -518,7 +530,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
     const ext = fileName.split('.').pop()?.toLowerCase();
     const videoFormats = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
     const imageFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
-    
+
     if (videoFormats.includes(ext || '')) return <Video className="w-4 h-4" />;
     if (imageFormats.includes(ext || '')) return <FileImage className="w-4 h-4" />;
     if (ext === 'pdf' || ext === 'doc' || ext === 'docx') return <FileText className="w-4 h-4" />;
@@ -555,7 +567,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
           <div className="mx-auto w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-8 shadow-xl">
             <Upload className="w-16 h-16 text-white" />
           </div>
-          
+
           <div className="space-y-4">
             <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Zona de Carga Masiva Avanzada
@@ -592,7 +604,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
               <Upload className="w-5 h-5 mr-2" />
               Seleccionar Archivos
             </Button>
-            
+
             <Button
               onClick={() => folderInputRef.current?.click()}
               variant="outline"
@@ -602,7 +614,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
               <Upload className="w-5 h-5 mr-2" />
               Cargar Carpeta
             </Button>
-            
+
             <Button
               onClick={() => setShowLinkForm(!showLinkForm)}
               variant="outline"
@@ -657,7 +669,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
                 </Button>
               </div>
             </div>
-            
+
             <div>
               <Label htmlFor="bulk-links">Enlaces múltiples (uno por línea)</Label>
               <Textarea
@@ -699,7 +711,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
           {/* Control Panel */}
           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-              
+
               {/* File Type Filter */}
               <div>
                 <Label className="text-xs font-medium text-gray-600">Filtrar por tipo:</Label>
@@ -815,7 +827,7 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
               {files.length > 0 && <span className="text-sm text-gray-500 ml-2">• {files.length} archivos</span>}
               {links.length > 0 && <span className="text-sm text-gray-500 ml-2">• {links.length} enlaces</span>}
             </h4>
-            
+
             <Button
               onClick={uploadFiles}
               disabled={uploadMutation.isPending || linkUploadMutation.isPending}

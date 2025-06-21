@@ -1,4 +1,3 @@
-
 // Sistema de monitoreo de rendimiento en tiempo real
 // Módulo de Carga v1.1.0 - Métricas avanzadas
 
@@ -52,24 +51,24 @@ export class PerformanceMonitor {
     if ('memory' in performance) {
       this.startMemoryMonitoring();
     }
-    
+
     // Monitorear Network Information API
     if ('connection' in navigator) {
       this.startNetworkMonitoring();
     }
-    
+
     // Iniciar monitoreo de Web Vitals
     this.startWebVitalsMonitoring();
   }
 
   startMonitoring(interval: number = 5000): void {
     if (this.isMonitoring) return;
-    
+
     this.isMonitoring = true;
     this.intervalId = window.setInterval(() => {
       this.collectSystemMetrics();
     }, interval);
-    
+
     console.log('[PERFORMANCE] Monitoring started with interval:', interval);
   }
 
@@ -100,10 +99,10 @@ export class PerformanceMonitor {
     if (!this.metrics.has(name)) {
       this.metrics.set(name, []);
     }
-    
+
     const metricHistory = this.metrics.get(name)!;
     metricHistory.push(metric);
-    
+
     // Mantener solo las últimas 100 entradas
     if (metricHistory.length > 100) {
       metricHistory.shift();
@@ -111,7 +110,7 @@ export class PerformanceMonitor {
 
     // Verificar thresholds
     this.checkThresholds(metric);
-    
+
     // Notificar observadores
     this.observers.forEach(observer => observer(metric));
   }
@@ -142,7 +141,7 @@ export class PerformanceMonitor {
       };
 
       this.alerts.push(alert);
-      
+
       // Mantener solo las últimas 50 alertas
       if (this.alerts.length > 50) {
         this.alerts.shift();
@@ -287,9 +286,9 @@ export class PerformanceMonitor {
         const secondHalf = values.slice(Math.floor(values.length / 2));
         const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
         const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-        
+
         const change = ((secondAvg - firstAvg) / firstAvg) * 100;
-        
+
         if (Math.abs(change) < 5) {
           trends[name] = 'stable';
         } else if (
@@ -357,3 +356,11 @@ export const performanceMonitor = new PerformanceMonitor();
 if (typeof window !== 'undefined') {
   performanceMonitor.startMonitoring();
 }
+console.log(`[PERFORMANCE] Monitoring started with interval:`, interval);
+    console.debug(`%c[MAAT v1.3.1]%c Performance Monitor Active`, 
+      'color: #007bff; font-weight: bold;', 
+      'color: #666;'
+    );
+
+    // Enviar métricas al backend si está configurado
+    if (this.config.sendToBackend && this.config.backendUrl) {
