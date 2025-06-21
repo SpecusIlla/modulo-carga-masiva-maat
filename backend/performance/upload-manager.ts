@@ -8,7 +8,8 @@ import { gzip, gunzip } from 'zlib';
 import { virusScanner } from '../security/virus-scanner';
 import { encryption } from '../security/encryption';
 import { auditLogger } from '../security/audit-logger';
-import { versionControl } from '../version-control';
+import { versionControl } from '../versioning/version-control-manager';
+import { fileService } from '../services/file-service';
 
 const gzipAsync = promisify(gzip);
 const gunzipAsync = promisify(gunzip);
@@ -356,6 +357,23 @@ export class UploadManager {
         lastAccess: Date.now()
       });
 
+      // INTEGRACIÓN: Guardar en FileService automáticamente
+      try {
+        const fileMetadata = await fileService.saveFile({
+          fileName: `${session.hash}_${session.filePath}`,
+          originalName: session.filePath,
+          filePath: finalPath,
+          fileSize: session.lastAccess,
+          mimeType: this.detectMimeType(session.filePath),
+          userId: session.metadata.userId || 'anonymous',
+          uploadSessionId: session.hash,
+          tags: ['chunked-upload', 'assembled']
+        });
+        console.log(`[UPLOAD-MANAGER] File saved to database: ${fileMetadata.id}`);
+      } catch (saveError) {
+        console.error('[UPLOAD-MANAGER] Failed to save to database:', saveError);
+      }
+
       // Log completion
       await auditLogger.logEvent({
         action: 'upload_completed',
@@ -593,6 +611,26 @@ export class UploadManager {
 
   private generateUploadId(): string {
     return `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private detectMimeType(fileName: string): string {
+    const ext = require('path').extname(fileName).toLowerCase();
+    const mimeTypes: { [key: string]: string } = {
+      '.pdf': 'application/pdf',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.xls': 'application/vnd.ms-excel',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.txt': 'text/plain',
+      '.json': 'application/json',
+      '.zip': 'application/zip',
+      '.rar': 'application/x-rar-compressed'
+    };
+    return mimeTypes[ext] || 'application/octet-stream';
   }
 
   getActiveUploads(): any[] {

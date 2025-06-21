@@ -3,6 +3,10 @@ import { files, users } from '../database/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
+import { uploadManager } from '../performance/upload-manager';
+import { virusScanner } from '../security/virus-scanner';
+import { versionControl } from '../versioning/version-control-manager';
+import { auditLogger } from '../security/audit-logger';
 
 export interface FileMetadata {
   id: string;
@@ -32,6 +36,18 @@ export class FileService {
     tags?: string[];
   }): Promise<FileMetadata> {
     try {
+      // SEGURIDAD: Escanear archivo antes de guardarlo
+      const scanResult = await this.virusScanner.scanFile(fileData.filePath, fileData.originalName);
+      if (!scanResult.isClean) {
+        await auditLogger.logEvent({
+          action: 'file_quarantined',
+          userId: fileData.userId,
+          resourceId: fileData.fileName,
+          details: { threats: scanResult.threats, fileName: fileData.originalName }
+        });
+        throw new Error(`Security threat detected: ${scanResult.threats.join(', ')}`);
+      }
+
       // Calcular hash del archivo
       const fileBuffer = await fs.readFile(fileData.filePath);
       const fileHash = createHash('sha256').update(fileBuffer).digest('hex');
@@ -59,6 +75,32 @@ export class FileService {
         tags: fileData.tags || [],
         status: 'uploaded'
       }).returning();
+
+      // VERSIONADO: Crear versión automática
+      try {
+        await versionControl.createVersion(
+          fileData.filePath,
+          savedFile.id,
+          fileData.userId,
+          `Auto-save: ${fileData.originalName}`,
+          ['auto-generated', 'upload', ...(fileData.tags || [])]
+        );
+      } catch (versionError) {
+        console.warn('[FILE-SERVICE] Version creation failed:', versionError);
+      }
+
+      // AUDITORIA: Registrar evento de guardado
+      await auditLogger.logEvent({
+        action: 'file_saved',
+        userId: fileData.userId,
+        resourceId: savedFile.id,
+        details: {
+          fileName: fileData.originalName,
+          fileSize: fileData.fileSize,
+          mimeType: fileData.mimeType,
+          scanResult: scanResult.isClean ? 'clean' : 'threat_detected'
+        }
+      });
 
       return {
         id: savedFile.id,
