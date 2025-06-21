@@ -1,4 +1,3 @@
-
 /**
  * Tests E2E para Upload Manager - MAAT v1.3.0
  * Cobertura completa con mocks y validaciones
@@ -310,13 +309,13 @@ describe('Upload Manager Tests', () => {
   describe('Performance Metrics', () => {
     it('should track upload performance metrics', async () => {
       const metrics = uploadManager.getPerformanceMetrics();
-      
+
       expect(metrics).toHaveProperty('activeUploads');
       expect(metrics).toHaveProperty('averageSpeed');
       expect(metrics).toHaveProperty('memoryUsage');
       expect(metrics).toHaveProperty('cacheStats');
       expect(metrics).toHaveProperty('largeFileMetrics');
-      
+
       expect(typeof metrics.activeUploads).toBe('number');
       expect(typeof metrics.averageSpeed).toBe('number');
       expect(metrics.memoryUsage).toHaveProperty('current');
@@ -325,7 +324,7 @@ describe('Upload Manager Tests', () => {
 
     it('should optimize performance based on metrics', async () => {
       const optimization = uploadManager.optimizePerformance();
-      
+
       expect(optimization).toHaveProperty('optimizations');
       expect(optimization).toHaveProperty('metrics');
       expect(Array.isArray(optimization.optimizations)).toBe(true);
@@ -409,30 +408,50 @@ describe('Upload Manager Tests', () => {
 describe('Performance Benchmarks', () => {
   it('should complete small file upload in under 100ms', async () => {
     const startTime = Date.now();
-    
+
     // Simular upload de archivo pequeño
     const testFile = Buffer.from('Small test content');
-    
+
     // Aquí iría la lógica de upload real
     await new Promise(resolve => setTimeout(resolve, 10)); // Simular procesamiento
-    
+
     const duration = Date.now() - startTime;
     expect(duration).toBeLessThan(100);
   });
 
   it('should maintain memory usage under limit for large files', async () => {
     const initialMemory = process.memoryUsage().heapUsed;
-    
+
     // Simular procesamiento de archivo grande
     const largeBuffer = Buffer.alloc(50 * 1024 * 1024, 'x'); // 50MB
-    
+
     // Procesar y liberar inmediatamente
     const hash = createHash('sha256').update(largeBuffer).digest('hex');
-    
+
     const finalMemory = process.memoryUsage().heapUsed;
     const memoryIncrease = finalMemory - initialMemory;
-    
+
     // El aumento de memoria no debería ser mayor al archivo
     expect(memoryIncrease).toBeLessThan(largeBuffer.length);
+  });
+});
+import { OptimizedUploadManager } from '../backend/performance/upload-manager';
+import { fileService } from '../backend/services/file-service';
+import { db, testConnection } from '../database/connection';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from '@jest/globals';
+
+describe('OptimizedUploadManager', () => {
+  let uploadManager: OptimizedUploadManager;
+
+  beforeAll(async () => {
+    // Verificar conexión a base de datos de test
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      throw new Error('Database connection required for tests');
+    }
+  });
+
+  beforeEach(() => {
+    uploadManager = new OptimizedUploadManager();
   });
 });
