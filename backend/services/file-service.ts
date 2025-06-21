@@ -1,4 +1,3 @@
-
 import { db } from '../database/connection';
 import { files, users } from '../database/schema';
 import { eq, desc, and } from 'drizzle-orm';
@@ -19,7 +18,7 @@ export interface FileMetadata {
 }
 
 export class FileService {
-  
+
   async saveFile(fileData: {
     fileName: string;
     originalName: string;
@@ -158,7 +157,7 @@ export class FileService {
           .from(files)
           .where(eq(files.id, fileId))
           .limit(1);
-        
+
         if (dbFile?.filePath) {
           await fs.unlink(dbFile.filePath);
         }
