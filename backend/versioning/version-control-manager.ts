@@ -1,5 +1,5 @@
 
-// Sistema de Control de Versiones para archivos - MAAT v1.2.0
+// Sistema de Control de Versiones para archivos - MAAT v1.3.1
 // Permite tracking de cambios, rollback y versionado automático
 
 import { createHash } from 'crypto';

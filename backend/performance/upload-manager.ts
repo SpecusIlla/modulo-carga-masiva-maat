@@ -870,4 +870,5 @@ export class UploadManager {
   }
 }
 
+// Gestor optimizado de cargas - MAAT v1.3.1
 export const uploadManager = new UploadManager();

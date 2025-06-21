@@ -1,4 +1,3 @@
-
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
@@ -63,7 +62,7 @@ const server = http.createServer((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🟡 Demostración MAAT ejecutándose en puerto ${PORT}`);
+    console.log(`🟡 Demostración MAAT v1.3.1 ejecutándose en puerto ${PORT}`);
     console.log(`🌐 Abre: http://localhost:${PORT}/demo`);
     console.log(`📁 Cargador masivo listo para probar`);
 });
