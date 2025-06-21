@@ -18,6 +18,8 @@ export interface FileMetadata {
 }
 
 export class FileService {
+  private uploadManager = new UploadManager();
+  private virusScanner = new VirusScanner();
 
   async saveFile(fileData: {
     fileName: string;
