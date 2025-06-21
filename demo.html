@@ -235,6 +235,12 @@
         console.log('🔐 JWT Authentication: ✅');
         console.log('📈 Auto-scaling: ✅');
         console.log('🎯 Calificación: 100/100');
+
+        // Verificar conectividad API
+        fetch('/api/health')
+            .then(response => response.json())
+            .then(data => console.log('🔗 API Health Check:', data))
+            .catch(err => console.log('⚠️ API no disponible:', err.message));
     </script>
 </body>
 </html>
