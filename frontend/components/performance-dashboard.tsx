@@ -189,10 +189,11 @@ export function PerformanceDashboard() {
           </Badge>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-1 sm:gap-2">
           <Button
             variant="outline"
             size="sm"
+            className="text-xs sm:text-sm px-2 sm:px-3"
             onClick={() => setAutoRefresh(!autoRefresh)}
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
@@ -226,8 +227,8 @@ export function PerformanceDashboard() {
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Metric Cards - Responsive optimizado */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
         {getMetricCards().map((metric, index) => (
           <Card key={index}>
             <CardContent className="p-4">
@@ -249,8 +250,8 @@ export function PerformanceDashboard() {
         ))}
       </div>
 
-      {/* Health Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Health Status - Mobile First */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

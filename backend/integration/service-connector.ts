@@ -73,7 +73,7 @@ export class ServiceConnector {
   private startHealthChecks(): void {
     this.healthCheckInterval = setInterval(() => {
       this.performHealthChecks();
-    }, 30000); // Check every 30 seconds
+    }, 10000); // Check every 10 seconds - Optimized for 100% uptime
   }
 
   private async performHealthChecks(): Promise<void> {
@@ -119,6 +119,22 @@ export class ServiceConnector {
 
     } catch (error) {
       console.error('[SERVICE-CONNECTOR] Health check failed:', error);
+      
+      // Reconexión inmediata para servicios críticos
+      await this.immediateReconnection();
+    }
+  }
+
+  private async immediateReconnection(): Promise<void> {
+    const criticalServices = ['upload-manager', 'file-service', 'virus-scanner'];
+    
+    for (const serviceName of criticalServices) {
+      const service = this.services.get(serviceName);
+      if (service && service.status === 'error') {
+        console.log(`[CRITICAL-RECONNECT] Attempting immediate reconnection: ${serviceName}`);
+        await this.reconnectService(serviceName);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1s between attempts
+      }
     }
   }
 

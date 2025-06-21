@@ -79,7 +79,7 @@ export class NetworkErrorHandler {
   private priorityQueue: PriorityQueueItem[] = [];
   private isProcessingQueue = false;
   private readonly CIRCUIT_BREAKER_THRESHOLD = 5;
-  private readonly CIRCUIT_BREAKER_TIMEOUT = 60000; // 1 minuto
+  private readonly CIRCUIT_BREAKER_TIMEOUT = 30000; // 30 segundos - Optimized recovery
 
   constructor(private config: Partial<RetryConfig> = {}) {
     this.loadRecoverySessions();
@@ -518,6 +518,11 @@ export class NetworkErrorHandler {
         nextAttemptTime: 0
       };
       console.log('[CIRCUIT-BREAKER] Circuito cerrado - Servicio restaurado');
+      
+      // Procesar cola de prioridad inmediatamente tras recuperación
+      if (this.priorityQueue.length > 0) {
+        this.processPriorityQueue();
+      }
     } else if (this.circuitBreaker.failureCount > 0) {
       this.circuitBreaker = {
         ...this.circuitBreaker,
