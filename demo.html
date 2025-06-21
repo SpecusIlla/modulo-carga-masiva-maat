@@ -1,217 +1,443 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="MAAT v1.3.1">
-    <title>MAAT v1.3.1 - Sistema Empresarial Completo</title>
+    <meta name="generator" content="MAAT v1.4.0">
+    <title>MAAT v1.4.0 - Sistema Empresarial Completo</title>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            color: #1f2937;
+            line-height: 1.6;
         }
+
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(90deg, #1f2937 0%, #374151 100%);
-            color: white;
             padding: 24px;
-            text-align: center;
         }
-        .version-badge {
-            display: inline-block;
-            background: #10b981;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        .main-content {
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
             padding: 32px;
+            text-align: center;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 12px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #6b7280;
+            margin-top: 12px;
+        }
+
+        .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 32px;
+            margin-bottom: 32px;
         }
+
+        .upload-section, .features-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
         .upload-zone {
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
+            border: 3px dashed #d1d5db;
+            border-radius: 16px;
             padding: 48px 24px;
             text-align: center;
-            background: #f9fafb;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
             transition: all 0.3s ease;
             cursor: pointer;
+            margin-bottom: 24px;
         }
-        .upload-zone:hover, .upload-zone.dragover {
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
             border-color: #3b82f6;
-            background: #eff6ff;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.15);
         }
+
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            padding: 20px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .upload-zone h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .upload-zone p {
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(107, 114, 128, 0.1);
+            color: #374151;
+            border: 2px solid rgba(107, 114, 128, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(107, 114, 128, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .features-section h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #1f2937;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-bottom: 32px;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            font-size: 15px;
+        }
+
+        .features-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-icon {
+            width: 20px;
+            height: 20px;
+            color: #10b981;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
-            margin-top: 24px;
-        }
-        .stat-card {
-            background: #f8fafc;
-            padding: 16px;
-            border-radius: 8px;
-            border-left: 4px solid #3b82f6;
-        }
-        .buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 24px;
-        }
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-        }
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-        .features-list {
-            list-style: none;
-            padding: 0;
-        }
-        .features-list li {
-            padding: 8px 0;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-        }
-        .features-list li:before {
-            content: "✅";
-            margin-right: 8px;
-        }
-        .tech-info {
-            text-align: center;
-            padding: 24px;
-            color: #6b7280;
-            font-size: 14px;
-            background: #f9fafb;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
         }
 
-        .version-info {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 8px 12px;
-            margin: 10px 0;
-            font-size: 12px;
-            color: #495057;
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #3b82f6;
             text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .tech-info {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            color: #6b7280;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tech-info h3 {
+            color: #1f2937;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .tech-info p {
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .version-indicator {
-            color: #28a745;
-            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #10b981;
+            font-weight: 600;
         }
 
-        [data-version] {
-            font-weight: bold;
-            color: #007bff;
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+        }
+
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Sistema MAAT<span class="version-badge">v1.3.1</span></h1>
+            <h1>
+                Sistema MAAT
+                <span class="version-badge">
+                    <i data-lucide="zap"></i>
+                    v1.4.0
+                </span>
+            </h1>
             <p>Módulo de Carga Masiva Autocontenido - Versión Empresarial</p>
         </div>
 
         <div class="main-content">
-            <div>
-                <h2>Zona de Carga</h2>
+            <div class="upload-section">
+                <h2>
+                    <i data-lucide="upload-cloud"></i>
+                    Zona de Carga
+                </h2>
                 <div class="upload-zone" onclick="selectFiles()">
-                    <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
+                    <div class="upload-icon">
+                        <i data-lucide="folder-plus" style="width: 40px; height: 40px;"></i>
+                    </div>
                     <h3>Arrastra archivos aquí o haz clic para seleccionar</h3>
                     <p>Soporta hasta 10 archivos simultáneos de 100MB cada uno</p>
                 </div>
                 <input type="file" id="fileInput" multiple style="display:none;">
 
                 <div class="buttons">
-                    <button class="btn btn-primary" onclick="selectFiles()">Seleccionar Archivos</button>
-                    <button class="btn btn-secondary" onclick="bulkUpload()">Carga Masiva</button>
+                    <button class="btn btn-primary" onclick="selectFiles()">
+                        <i data-lucide="file-plus"></i>
+                        Seleccionar Archivos
+                    </button>
+                    <button class="btn btn-secondary" onclick="bulkUpload()">
+                        <i data-lucide="upload"></i>
+                        Carga Masiva
+                    </button>
                 </div>
             </div>
 
-            <div>
-                <h2>Características v1.3.1</h2>
+            <div class="features-section">
+                <h2>
+                    <i data-lucide="star"></i>
+                    Características v1.4.0
+                </h2>
                 <ul class="features-list">
-                    <li>PostgreSQL Database con Drizzle ORM</li>
-                    <li>Service Connector con Health Checks</li>
-                    <li>API REST con Swagger Documentation</li>
-                    <li>JWT Authentication System</li>
-                    <li>Auto-scaling Inteligente</li>
-                    <li>Performance Dashboard</li>
-                    <li>Virus Scanner Integrado</li>
-                    <li>Streaming Zero-Memory</li>
-                    <li>Web Workers para Hash</li>
-                    <li>Compresión Adaptativa</li>
+                    <li>
+                        <i data-lucide="database" class="feature-icon"></i>
+                        PostgreSQL Database con Drizzle ORM
+                    </li>
+                    <li>
+                        <i data-lucide="activity" class="feature-icon"></i>
+                        Service Connector con Health Checks
+                    </li>
+                    <li>
+                        <i data-lucide="api" class="feature-icon"></i>
+                        API REST con Swagger Documentation
+                    </li>
+                    <li>
+                        <i data-lucide="shield-check" class="feature-icon"></i>
+                        JWT Authentication System
+                    </li>
+                    <li>
+                        <i data-lucide="trending-up" class="feature-icon"></i>
+                        Auto-scaling Inteligente
+                    </li>
+                    <li>
+                        <i data-lucide="bar-chart-3" class="feature-icon"></i>
+                        Performance Dashboard
+                    </li>
+                    <li>
+                        <i data-lucide="shield" class="feature-icon"></i>
+                        Virus Scanner Integrado
+                    </li>
+                    <li>
+                        <i data-lucide="zap" class="feature-icon"></i>
+                        Streaming Zero-Memory
+                    </li>
+                    <li>
+                        <i data-lucide="cpu" class="feature-icon"></i>
+                        Web Workers para Hash
+                    </li>
+                    <li>
+                        <i data-lucide="archive" class="feature-icon"></i>
+                        Compresión Adaptativa
+                    </li>
                 </ul>
 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <strong>Velocidad</strong><br>
-                        12.7 MB/s sostenida
+                        <div class="stat-value">
+                            <i data-lucide="gauge"></i>
+                            12.7 MB/s
+                        </div>
+                        <div class="stat-label">Velocidad sostenida</div>
                     </div>
                     <div class="stat-card">
-                        <strong>Compresión</strong><br>
-                        65% reducción promedio
+                        <div class="stat-value">
+                            <i data-lucide="package"></i>
+                            65%
+                        </div>
+                        <div class="stat-label">Reducción promedio</div>
                     </div>
                     <div class="stat-card">
-                        <strong>Seguridad</strong><br>
-                        AES-256-GCM + Scanner
+                        <div class="stat-value">
+                            <i data-lucide="lock"></i>
+                            AES-256
+                        </div>
+                        <div class="stat-label">Encriptación + Scanner</div>
                     </div>
                     <div class="stat-card">
-                        <strong>Escalabilidad</strong><br>
-                        Auto-scaling activo
+                        <div class="stat-value">
+                            <i data-lucide="layers"></i>
+                            Auto-scaling
+                        </div>
+                        <div class="stat-label">Escalabilidad activa</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="tech-info">
-            <p><strong>MAAT v1.3.1</strong> - Sistema Empresarial Completo</p>
-            <p>Base de datos PostgreSQL | API REST | Auto-scaling | Service Connector activo</p>
+            <h3>
+                <span class="version-indicator">
+                    <i data-lucide="zap"></i>
+                    MAAT v1.4.0
+                </span>
+                - Sistema Empresarial Completo
+            </h3>
+            <p>
+                <i data-lucide="database"></i> Base de datos PostgreSQL | 
+                <i data-lucide="api"></i> API REST | 
+                <i data-lucide="trending-up"></i> Auto-scaling | 
+                <i data-lucide="activity"></i> Service Connector activo
+            </p>
         </div>
     </div>
 
     <script>
+        // Inicializar iconos Lucide
+        lucide.createIcons();
+
         // Funcionalidad básica para demostración
         const uploadZone = document.querySelector('.upload-zone');
         const fileInput = document.getElementById('fileInput');
@@ -240,20 +466,72 @@
 
         function handleFiles(files) {
             console.log('Archivos seleccionados:', files);
-            alert(`${files.length} archivo(s) seleccionado(s) para procesamiento con MAAT v1.3.1`);
+            
+            // Crear notificación moderna
+            showNotification(`${files.length} archivo(s) seleccionado(s) para procesamiento con MAAT v1.4.0`, 'success');
         }
 
-        // Funciones específicas del módulo MAAT según especificaciones
         function selectFiles() {
             document.getElementById('fileInput').click();
         }
 
         function bulkUpload() {
             console.log('Iniciando carga masiva...');
-            alert('MAAT v1.3.1: Sistema Empresarial - PostgreSQL, Auto-scaling, Service Connector activo');
+            showNotification('MAAT v1.4.0: Sistema Empresarial - PostgreSQL, Auto-scaling, Service Connector activo', 'info');
         }
 
-        // Mostrar versión en consola
+        // Sistema de notificaciones modernas
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 24px;
+                right: 24px;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #3b82f6, #2563eb)'};
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                backdrop-filter: blur(10px);
+                z-index: 1000;
+                max-width: 400px;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                animation: slideIn 0.3s ease;
+            `;
+
+            const icon = type === 'success' ? 'check-circle' : 'info';
+            notification.innerHTML = `
+                <i data-lucide="${icon}" style="width: 20px; height: 20px;"></i>
+                ${message}
+            `;
+
+            document.body.appendChild(notification);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+
+        // Animaciones CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Logs de consola estilizados
         console.log('%c🟡 MAAT v1.4.0 %ccargado - Sistema Empresarial Completo', 
                    'background: #ffc107; color: black; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
                    'color: #666; font-weight: normal;');
@@ -266,9 +544,26 @@
 
         // Verificar conectividad API
         fetch('/api/health')
-            .then(function(response) { return response.json(); })
-            .then(function(data) { console.log('🔗 API Health Check:', data); })
-            .catch(function(err) { console.log('⚠️ API no disponible en demo mode'); });
+            .then(response => response.json())
+            .then(data => console.log('🔗 API Health Check:', data))
+            .catch(err => console.log('⚠️ API no disponible en demo mode'));
+
+        // Efectos visuales adicionales
+        document.addEventListener('DOMContentLoaded', () => {
+            // Efecto de entrada suave
+            document.querySelectorAll('.upload-section, .features-section').forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    el.style.transition = 'all 0.6s ease';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, 200 * (index + 1));
+            });
+
+            // Inicializar todos los iconos Lucide
+            lucide.createIcons();
+        });
     </script>
 </body>
 </html>
