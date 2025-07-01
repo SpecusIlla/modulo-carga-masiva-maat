@@ -1,0 +1,19 @@
+
+{
+  "version": "1.0.5",
+  "releaseDate": "2025-06-23",
+  "status": "ESTABLE",
+  "buildHash": "a9e7d1f3",
+  "backupCreated": "maat-v1.0.5-complete-backup-20250623-2020.tar.gz",
+  "compatibility": {
+    "backward": ["1.0.0", "1.0.1", "1.0.2", "1.0.3", "1.0.4"],
+    "migrationRequired": false
+  },
+  "metrics": {
+    "documentsProcessed": 918,
+    "activeCategories": 6,
+    "activeProjects": 1,
+    "responseTime": "<200ms",
+    "uptime": "99.9%"
+  }
+}

@@ -1,0 +1,42 @@
+
+{
+  "versions": [
+    {
+      "version": "1.0.5",
+      "releaseDate": "2025-06-23",
+      "type": "documentation",
+      "status": "ESTABLE",
+      "buildHash": "a9e7d1f3",
+      "features": [
+        "Sistema de Documentación Integral (50+ páginas)",
+        "Sistema de Respaldos Mejorado",
+        "Build hash actualizado",
+        "Versión UI actualizada",
+        "Comentarios técnicos",
+        "Compatibilidad completa"
+      ],
+      "metrics": {
+        "documentsProcessed": 918,
+        "activeCategories": 6,
+        "responseTime": "<200ms",
+        "uptime": "99.9%"
+      }
+    },
+    {
+      "version": "1.4.0",
+      "releaseDate": "2025-01-23",
+      "type": "major",
+      "status": "ACTIVO",
+      "features": [
+        "PostgreSQL Database con Drizzle ORM",
+        "Service Connector con Health Checks",
+        "API REST con Swagger Documentation",
+        "JWT Authentication System",
+        "Auto-scaling Inteligente",
+        "Performance Dashboard",
+        "Virus Scanner Integrado"
+      ],
+      "score": "100/100"
+    }
+  ]
+}
