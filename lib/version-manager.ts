@@ -36,7 +36,7 @@ export class VersionManager {
       console.log(`[VERSION_MANAGER] Cargada versión: ${this._version}`);
     } catch (error) {
       console.error('[VERSION_MANAGER] Error al cargar versión:', error);
-      this._version = '1.4.0'; // Fallback
+      this._version = '1.0.5'; // Fallback
       this._name = '@maat/bulk-upload-module';
       this._description = 'Sistema MAAT - Módulo de Carga Masiva Empresarial';
     }
