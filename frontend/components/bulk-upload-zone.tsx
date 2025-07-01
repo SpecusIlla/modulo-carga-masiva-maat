@@ -214,13 +214,13 @@ export default function BulkUploadZone({ projectId, categories, onUploadComplete
   };
 
   useEffect(() => {
-    console.log('[BULK_UPLOAD] Component mounted - MAAT v1.3.1');
-    console.log('%c🚀 MAAT v1.3.1 %c- Sistema de Carga Masiva Empresarial', 
+    console.log('[BULK_UPLOAD] Component mounted - MAAT v1.0.5');
+    console.log('%c🚀 MAAT v1.0.5 %c- Sistema de Carga Masiva Empresarial', 
       'background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
       'color: #666; font-weight: normal;'
     );
     return () => {
-      console.log('[BULK_UPLOAD] Component unmounted - MAAT v1.3.1');
+      console.log('[BULK_UPLOAD] Component unmounted - MAAT v1.0.5');
     };
   }, []);
 

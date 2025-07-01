@@ -1,5 +1,5 @@
 // Sistema de monitoreo de rendimiento en tiempo real
-// Módulo de Carga v1.1.0 - Métricas avanzadas
+// Módulo de Carga v1.0.5 - Métricas avanzadas
 
 interface PerformanceMetric {
   name: string;
@@ -357,7 +357,7 @@ if (typeof window !== 'undefined') {
   performanceMonitor.startMonitoring();
 }
 console.log(`[PERFORMANCE] Monitoring started with interval:`, interval);
-    console.debug(`%c[MAAT v1.3.1]%c Performance Monitor Active`, 
+    console.debug(`%c[MAAT v1.0.5]%c Performance Monitor Active`, 
       'color: #007bff; font-weight: bold;', 
       'color: #666;'
     );

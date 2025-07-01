@@ -1,5 +1,5 @@
 
-// Componente de Control de Versiones - MAAT v1.3.1
+// Componente de Control de Versiones - MAAT v1.0.5
 // Interface para gestionar versiones de archivos
 
 import React, { useState, useEffect } from 'react';
