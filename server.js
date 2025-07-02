@@ -33,6 +33,9 @@ function obtenerVersionActual() {
     }
 }
 
+// MAAT v1.0.8 - Importar integrador central (assuming this is how it would be done with http module)
+// const { maatV108Integration } = require('./server/integration/v1.0.8-integration.ts');
+
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url);
     const pathname = parsedUrl.pathname;
@@ -84,6 +87,48 @@ const server = http.createServer((req, res) => {
                     timestamp: new Date().toISOString()
                 }));
             }, Math.random() * 2000 + 500); // 0.5-2.5 segundos
+        });
+        return;
+    }
+
+    // MAAT v1.0.8 - Nuevos endpoints integrados (example implementations - replace with actual logic)
+    if (pathname === '/api/v1.0.8/status' && req.method === 'GET') {
+        // try {
+        //   const status = maatV108Integration.getSystemStatus();
+        //   res.writeHead(200, {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'});
+        //   res.end(JSON.stringify(status));
+        // } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+            version: '1.0.8',
+            error: 'Failed to get system status',
+            message: 'Not implemented in this example' //error.message
+        }));
+        // }
+        return;
+    }
+
+    if (pathname === '/api/v1.0.8/classify' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            // try {
+            //   const result = await maatV108Integration.classifyDocumentWithEnhancements(JSON.parse(body));
+            //   res.writeHead(200, {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'});
+            //   res.end(JSON.stringify(result));
+            // } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+                success: false,
+                error: {
+                    code: 'INTEGRATION_ERROR',
+                    message: 'Classification not implemented in this example' //error.message
+                },
+                version: '1.0.8'
+            }));
+            // }
         });
         return;
     }
