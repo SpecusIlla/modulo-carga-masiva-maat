@@ -203,7 +203,7 @@ export class AdvancedContentValidator {
 
   private calculateEntropy(buffer: Buffer): number {
     const frequencies = new Array(256).fill(0);
-    
+
     for (let i = 0; i < buffer.length; i++) {
       frequencies[buffer[i]]++;
     }
@@ -310,9 +310,101 @@ export class AdvancedContentValidator {
     const levels = { low: 0, medium: 1, high: 2, critical: 3 };
     const currentLevel = levels[current];
     const proposedLevel = levels[proposed];
-    
+
     return proposedLevel > currentLevel ? proposed : current;
   }
 }
 
-export const advancedValidator = new AdvancedContentValidator();entValidator();
+export const advancedValidator = new AdvancedContentValidator();
+async validateFile(
+    file: Buffer,
+    filename: string,
+    options: ValidationOptions = {}
+  ): Promise<ValidationResult> {
+    try {
+      console.log(`[CONTENT_VALIDATOR] Validando archivo: ${filename}`);
+
+      // Validación de virus (si está disponible)
+      let virusScanResult: boolean = true;
+      try {
+        const virusScanner = await import('./virus-scanner');
+        virusScanResult = await virusScanner.virusScanner.scanBuffer(file, filename);
+      } catch (error) {
+        console.warn('[CONTENT_VALIDATOR] Virus scanner no disponible, continuando...');
+      }
+
+      // Validación básica de seguridad - implementación compatible
+      const scanResult = await this.performSecurityScan(file, filename);
+
+      // Validación de integridad de archivo - implementación básica
+      const integrityResult = await this.checkFileIntegrity(file, filename);
+constructor() {
+    // Inicialización básica - sin dependencias externas
+  }
+
+  /**
+   * Escaneo básico de seguridad para archivos
+   */
+  private async performSecurityScan(file: Buffer, filename: string): Promise<boolean> {
+    try {
+      // Validación básica de tamaño
+      if (file.length > 100 * 1024 * 1024) { // 100MB límite
+        return false;
+      }
+
+      // Validación básica de tipo de archivo por extensión
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt', '.jpg', '.png', '.zip'];
+      const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+
+      if (!allowedExtensions.includes(extension)) {
+        return false;
+      }
+
+      // Escaneo básico de contenido malicioso
+      const content = file.toString('utf8', 0, Math.min(1024, file.length));
+      const maliciousPatterns = ['<script', 'javascript:', 'vbscript:', 'onload='];
+
+      for (const pattern of maliciousPatterns) {
+        if (content.toLowerCase().includes(pattern)) {
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[CONTENT_VALIDATOR] Error en escaneo de seguridad:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Verificación básica de integridad de archivo
+   */
+  private async checkFileIntegrity(file: Buffer, filename: string): Promise<boolean> {
+    try {
+      // Verificación básica de integridad
+      if (file.length === 0) {
+        return false;
+      }
+
+      // Verificar que el archivo no esté corrupto (validación básica)
+      const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+
+      switch (extension) {
+        case '.pdf':
+          return file.subarray(0, 4).toString() === '%PDF';
+        case '.jpg':
+        case '.jpeg':
+          return file.subarray(0, 2).toString('hex') === 'ffd8';
+        case '.png':
+          return file.subarray(0, 8).toString('hex') === '89504e470d0a1a0a';
+        case '.zip':
+          return file.subarray(0, 2).toString('hex') === '504b';
+        default:
+          return true; // Asumir válido para otros tipos
+      }
+    } catch (error) {
+      console.error('[CONTENT_VALIDATOR] Error en verificación de integridad:', error);
+      return false;
+    }
+  }
