@@ -27,6 +27,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.0.0",
     "@types/pg": "^8.15.4",
+    "archiver": "^7.0.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "drizzle-kit": "^0.31.1",
