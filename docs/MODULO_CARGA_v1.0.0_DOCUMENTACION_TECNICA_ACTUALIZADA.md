@@ -8,7 +8,7 @@
 **Módulo:** Sistema de Carga de Archivos  
 **Versión:** v1.0.0  
 **Fecha:** 14 de Junio, 2025  
-**Aplicación Principal:** MAAT v1.0.1  
+**Aplicación Principal:** fracta_Notarius v1.0.1  
 **Estado:** Producción Empresarial con Mejoras Implementadas  
 
 ---
@@ -18,7 +18,7 @@
 ### Diagrama de Componentes Actualizado
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                MÓDULO DE CARGA v1.0.0                       │
+│            fracta_Notarius MÓDULO DE CARGA v1.0.0          │
 ├─────────────────────────────────────────────────────────────┤
 │  FRONTEND (React/TypeScript)                               │
 │  ├── file-upload.tsx (Individual + Web Workers)            │

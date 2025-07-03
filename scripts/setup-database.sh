@@ -1,10 +1,10 @@
 
 #!/bin/bash
 
-# Script de configuración de base de datos PostgreSQL para MAAT v1.3.1
+# Script de configuración de base de datos PostgreSQL para fracta_Notarius v1.3.1
 # 🗄️ Configuración empresarial completa
 
-echo "🗄️ Configurando Base de Datos MAAT v1.3.1..."
+echo "🗄️ Configurando Base de Datos fracta_Notarius v1.3.1..."
 
 # Verificar si PostgreSQL está instalado
 if ! command -v psql &> /dev/null; then
@@ -37,13 +37,13 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 # Configurar base de datos
-echo "⚙️ Configurando base de datos MAAT..."
+echo "⚙️ Configurando base de datos fracta_Notarius..."
 
 # Crear usuario y base de datos
 sudo -u postgres psql << EOF
-CREATE USER maat_user WITH PASSWORD 'maat_password_secure_2024';
-CREATE DATABASE maat_database OWNER maat_user;
-GRANT ALL PRIVILEGES ON DATABASE maat_database TO maat_user;
+CREATE USER fracta_notarius_user WITH PASSWORD 'fracta_notarius_password_secure_2024';
+CREATE DATABASE fracta_notarius_database OWNER fracta_notarius_user;
+GRANT ALL PRIVILEGES ON DATABASE fracta_notarius_database TO maat_user;
 \q
 EOF
 

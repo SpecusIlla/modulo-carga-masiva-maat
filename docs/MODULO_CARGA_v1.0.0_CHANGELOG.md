@@ -1,3 +1,10 @@
+` tags.
+
+```text
+Replacing "MAAT" with "fracta_Notarius" in the database configuration script header.
+```
+
+<replit_final_file>
 # MÓDULO DE CARGA - CHANGELOG v1.0.0
 ## Sistema de Carga de Archivos - Registro de Versiones
 

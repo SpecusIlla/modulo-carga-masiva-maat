@@ -1,5 +1,5 @@
 
-# 📚 MAAT - Documentación Completa del Sistema v1.0.8
+# 📚 fracta_Notarius - Documentación Completa del Sistema v1.0.8
 
 **Módulo de Carga Masiva Autocontenido**  
 **Jinn del Equilibrio, la Verdad y la Trazabilidad**
@@ -22,7 +22,7 @@
 ## 🎯 Información General
 
 ### Descripción del Sistema
-MAAT es un sistema empresarial completo para carga masiva de documentos con capacidades avanzadas de clasificación, validación y monitoreo. Diseñado para entornos de producción con alta disponibilidad y rendimiento optimizado.
+fracta_Notarius es un sistema empresarial completo para carga masiva de documentos con capacidades avanzadas de clasificación, validación y monitoreo. Diseñado para entornos de producción con alta disponibilidad y rendimiento optimizado.
 
 ### Estado Actual
 - **Versión**: 1.0.8
@@ -226,7 +226,7 @@ server/
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    MAAT v1.0.8 Architecture                │
+│                fracta_Notarius v1.0.8 Architecture        │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -323,12 +323,12 @@ frontend/
 #### Acceso al Sistema
 1. **URL de Acceso**: `http://localhost:5000/demo`
 2. **Modo Demo**: Sistema funcional sin autenticación
-3. **Estado**: MAAT v1.0.8 - ESTABLE ✅
+3. **Estado**: fracta_Notarius v1.0.8 - ESTABLE ✅
 
 #### Interfaz Principal
 ```
 ┌────────────────────────────────────────────────────────┐
-│ 🟡 MAAT v1.0.8 - Sistema Empresarial Completo        │
+│ 🟡 fracta_Notarius v1.0.8 - Sistema Empresarial Completo │
 ├────────────────────────────────────────────────────────┤
 │                                                        │
 │ 📊 Métricas del Sistema:                              │
@@ -428,7 +428,7 @@ Git
 ```bash
 # Clonar repositorio
 git clone [repo-url]
-cd maat-v1.0.8
+cd fracta_notarius-v1.0.8
 
 # Instalar dependencias
 npm install
@@ -1070,8 +1070,8 @@ MIT License - Ver [LICENSE](LICENSE) para detalles completos.
 
 **📅 Última Actualización**: 23 de Junio, 2025  
 **📋 Versión del Documento**: 1.0.8  
-**👤 Autor**: Equipo MAAT Development  
-**📧 Contacto**: soporte@maat.replit.app
+**👤 Autor**: Equipo fracta_Notarius Development  
+**📧 Contacto**: soporte@fracta_notarius.replit.app
 
 ---
 

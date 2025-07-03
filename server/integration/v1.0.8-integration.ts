@@ -222,14 +222,14 @@ export class MAAT_v108_Integration {
     systemHealthMonitor.stopMonitoring();
     performanceOptimizer.stopOptimization();
     this.isInitialized = false;
-    console.log('[MAAT-v1.0.8] Sistema limpiado para testing');
+    console.log('[fracta_Notarius-v1.0.8] Sistema limpiado para testing');
   }
 }
 
 // Instancia singleton del integrador
-export const maatV108Integration = new MAAT_v108_Integration();
+export const fractaNotariusV108Integration = new MAAT_v108_Integration();
 
 // Auto-inicialización
-maatV108Integration.initialize().catch(error => {
-  console.error('[MAAT-v1.0.8] Error durante auto-inicialización:', error);
+fractaNotariusV108Integration.initialize().catch(error => {
+  console.error('[fracta_Notarius-v1.0.8] Error durante auto-inicialización:', error);
 });

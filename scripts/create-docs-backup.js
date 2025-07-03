@@ -26,7 +26,7 @@ async function createDocsBackup() {
     const output = require('fs').createWriteStream(outputPath);
     archive.pipe(output);
 
-    // Archivos core del sistema MAAT
+    // Archivos core del sistema fracta_Notarius
     const coreFiles = [
       // Backend completo
       'backend/**/*.ts',
