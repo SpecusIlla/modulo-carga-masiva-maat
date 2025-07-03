@@ -1,6 +1,6 @@
 
 /**
- * Gestor de Versiones Dinámico - Sistema MAAT
+ * Gestor de Versiones Dinámico - Sistema fracta_Notarius
  * Mantiene la versión sincronizada en todo el sistema
  */
 
@@ -37,8 +37,8 @@ export class VersionManager {
     } catch (error) {
       console.error('[VERSION_MANAGER] Error al cargar versión:', error);
       this._version = '1.0.5'; // Fallback
-      this._name = '@maat/bulk-upload-module';
-      this._description = 'Sistema MAAT - Módulo de Carga Masiva Empresarial';
+      this._name = '@fracta_Notarius/bulk-upload-module';
+      this._description = 'Sistema fracta_Notarius - Módulo de Carga Masiva Empresarial';
     }
   }
 
@@ -55,7 +55,7 @@ export class VersionManager {
   }
 
   get fullName(): string {
-    return `MAAT v${this._version}`;
+    return `fracta_Notarius v${this._version}`;
   }
 
   get systemStatus(): string {

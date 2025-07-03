@@ -1,5 +1,5 @@
 
-# 🟡 MAAT v1.4.0 - Sistema Empresarial Completo
+# 🟡 fracta_Notarius v1.4.0 - Sistema Empresarial Completo
 
 **Módulo de Carga Masiva Autocontenido** - Jinn del Equilibrio, la Verdad y la Trazabilidad
 
@@ -40,8 +40,8 @@
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/tu-usuario/maat-v1.4.0.git
-cd maat-v1.4.0
+git clone https://github.com/tu-usuario/fracta_Notarius-v1.4.0.git
+cd fracta_Notarius-v1.4.0
 
 # Instalar dependencias
 npm install
@@ -59,7 +59,7 @@ npm run dev
 ## 🏗️ Arquitectura del Sistema
 
 ```
-MAAT v1.4.0/
+fracta_Notarius v1.4.0/
 ├── backend/              # Lógica del servidor
 │   ├── api/             # Endpoints REST + Swagger
 │   ├── auth/            # Sistema JWT
@@ -81,7 +81,7 @@ MAAT v1.4.0/
 
 ```env
 # Base de datos
-DATABASE_URL=postgresql://user:pass@localhost:5432/maat
+DATABASE_URL=postgresql://user:pass@localhost:5432/fracta_Notarius
 
 # Seguridad
 JWT_SECRET=tu-jwt-secret-ultra-seguro
@@ -257,9 +257,9 @@ MIT License - ver [LICENSE](LICENSE) para detalles.
 
 ## 🆘 Soporte
 
-- **Issues**: [GitHub Issues](https://github.com/tu-usuario/maat-v1.4.0/issues)
-- **Wiki**: [Documentación completa](https://github.com/tu-usuario/maat-v1.4.0/wiki)
-- **Email**: soporte@maat.replit.app
+- **Issues**: [GitHub Issues](https://github.com/tu-usuario/fracta_Notarius-v1.4.0/issues)
+- **Wiki**: [Documentación completa](https://github.com/tu-usuario/fracta_Notarius-v1.4.0/wiki)
+- **Email**: soporte@fracta_Notarius.replit.app
 
 ---
 

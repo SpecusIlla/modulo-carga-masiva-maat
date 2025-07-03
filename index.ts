@@ -1,4 +1,4 @@
-// Sistema MAAT v1.4.0 - Módulo de Carga Masiva Empresarial
+// Sistema fracta_Notarius v1.4.0 - Módulo de Carga Masiva Empresarial
 export { BulkUploadZone } from './components';
 export type { 
   BulkUploadZoneProps, 

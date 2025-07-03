@@ -1,7 +1,7 @@
 {
-  "name": "@maat/bulk-upload-module",
+  "name": "@fracta_Notarius/bulk-upload-module",
   "version": "1.0.5",
-  "description": "Módulo de carga masiva autocontenido con IA integrada - Sistema MAAT v1.0.5",
+  "description": "Módulo de carga masiva autocontenido con IA integrada - Sistema fracta_Notarius v1.0.5",
   "main": "index.js",
   "type": "module",
   "exports": {
@@ -47,7 +47,7 @@
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
-  "author": "Sistema MAAT v1.0.5",
+  "author": "Sistema fracta_Notarius v1.0.5",
   "license": "MIT",
   "scripts": {
     "test": "jest",

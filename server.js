@@ -11,8 +11,8 @@ function obtenerVersionActual() {
 
         return {
             version: packageData.version,
-            fullName: `MAAT v${packageData.version}`,
-            status: `MAAT v${packageData.version} - Sistema Empresarial Completo`,
+            fullName: `fracta_Notarius v${packageData.version}`,
+            status: `fracta_Notarius v${packageData.version} - Sistema Empresarial Completo`,
             features: [
                 'PostgreSQL Database',
                 'Service Connector', 
@@ -26,19 +26,19 @@ function obtenerVersionActual() {
         console.error('[VERSION] Error al cargar versión:', error);
         return {
             version: '1.4.0',
-            fullName: 'MAAT v1.4.0',
-            status: 'MAAT v1.4.0 - Sistema Empresarial Completo',
+            fullName: 'fracta_Notarius v1.4.0',
+            status: 'fracta_Notarius v1.4.0 - Sistema Empresarial Completo',
             features: ['Sistema Base']
         };
     }
 }
 
-// MAAT v1.0.8 - Integración Completa Activada
+// fracta_Notarius v1.0.8 - Integración Completa Activada
 import('./server/integration/v1.0.8-integration.js').then(module => {
     global.maatV108Integration = module.maatV108Integration;
-    console.log('[MAAT-v1.0.8] 🚀 Integración activada completamente');
+    console.log('[fracta_Notarius-v1.0.8] 🚀 Integración activada completamente');
 }).catch(err => {
-    console.log('[MAAT-v1.0.8] ⚠️ Integración en modo simulado');
+    console.log('[fracta_Notarius-v1.0.8] ⚠️ Integración en modo simulado');
 });
 
 const server = http.createServer((req, res) => {
@@ -96,7 +96,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // MAAT v1.0.8 - Status endpoint totalmente funcional
+    // fracta_Notarius v1.0.8 - Status endpoint totalmente funcional
     if (pathname === '/api/v1.0.8/status' && req.method === 'GET') {
         try {
             const status = global.maatV108Integration ? 
@@ -183,10 +183,10 @@ const server = http.createServer((req, res) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
     const versionData = obtenerVersionActual();
-    console.log(`🟡 Demostración MAAT v1.0.5 ejecutándose en puerto ${PORT}`);
+    console.log(`🟡 Demostración fracta_Notarius v1.0.5 ejecutándose en puerto ${PORT}`);
     console.log(`🌐 Abre: http://localhost:${PORT}/demo`);
     console.log(`📁 Cargador masivo listo para probar`);
     console.log(`📊 Versión: 1.0.5 | Build: a9e7d1f3 | Estado: ESTABLE ✅`);
     console.log('📈 Métricas: 918 documentos, 99.9% uptime, <200ms response');
-    console.log('💾 Backup: maat-v1.0.5-complete-backup-20250623-2020.tar.gz');
+    console.log('💾 Backup: fracta_Notarius-v1.0.5-complete-backup-20250623-2020.tar.gz');
 });
